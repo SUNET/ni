@@ -33,6 +33,17 @@ NOCSCHEMA_MUTATIONS = [
     NOCRootMutation,
 ]
 
+import logging
+import pprint
+import os
+
 @method_decorator(login_required, name='dispatch')
 class AuthGraphQLView(GraphQLView):
-    pass
+    def dispatch(self, request, *args, **kwargs):
+        with open(f'/app/log/graphql.log', 'w') as f:
+            query_body = request.body.decode()
+            print('\n', file=f)
+            print(query_body, file=f)
+            print('\n', file=f)
+
+        return super().dispatch(request, *args, **kwargs)

@@ -23,23 +23,7 @@ class Mutation(*ALL_MUTATIONS, graphene.ObjectType):
     refresh_token = graphql_jwt.relay.Refresh.Field()
     #revoke_token = graphql_jwt.relay.Revoke.Field()
 
-class LoggerMiddleware(object):
-    def resolve(self, next, root, info, **args):
-        with open(f'/app/log/graphql.log', 'w') as f:
-            print('\n\n', file=f)
-            print('==========', file=f)
-            print(pprint.pformat(root, indent=1), file=f)
-            print(pprint.pformat(info, indent=1), file=f)
-            print(pprint.pformat(args, indent=1), file=f)
-            print('\n\n', file=f)
-        return next(root, info, **args)
-
-class AuditSchema(graphene.Schema):
-    def execute(self, *args, **kwargs):
-        kwargs['middleware'] = [LoggerMiddleware()]
-        return super().execute(*args, **kwargs)
-
-schema = AuditSchema(
+schema = graphene.Schema(
             query=Query,
             mutation=Mutation,
             auto_camelcase=False,
