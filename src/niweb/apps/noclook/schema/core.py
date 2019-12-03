@@ -1087,7 +1087,7 @@ class NIRelationField(NIBasicField):
                 )
             )
         def resolve_node_relation(self, info, **kwargs):
-            log_resolver(self, 'resolve_node_relation')
+            log_resolver(type(self), 'resolve_node_relation')
             ret = []
             reldicts = self.get_node().relationships.get(rel_name, None)
 
