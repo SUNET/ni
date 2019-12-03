@@ -30,6 +30,7 @@ class NOCAutoQuery(graphene.ObjectType):
     getNodeById = graphene.Field(NodeHandler, handle_id=graphene.Int())
 
     def resolve_getNodeById(self, info, **args):
+        log_resolver(self, 'resolve_getNodeById')
         handle_id = args.get('handle_id')
 
         ret = None
@@ -112,6 +113,7 @@ class NOCAutoQuery(graphene.ObjectType):
 
 def get_node2node_relations_resolver(id1_name, id2_name, rel_type):
     def resolve_getNode1Node2Relations(self, info, **kwargs):
+        log_resolver(self, 'resolve_getNode1Node2Relations')
         group_id = kwargs.get(id1_name)
         contact_id = kwargs.get(id2_name)
 
@@ -166,11 +168,13 @@ class NOCRootQuery(NOCAutoQuery):
     getRolesFromRoleGroup = graphene.List(Role, name=graphene.String())
 
     def resolve_getAvailableDropdowns(self, info, **kwargs):
+        log_resolver(self, 'resolve_getAvailableDropdowns')
         django_dropdowns = [d.name for d in DropdownModel.objects.all()]
 
         return django_dropdowns
 
     def resolve_getChoicesForDropdown(self, info, **kwargs):
+        log_resolver(self, 'resolve_getChoicesForDropdown')
         # django dropdown resolver
         name = kwargs.get('name')
         ddqs = DropdownModel.get(name)
@@ -181,6 +185,7 @@ class NOCRootQuery(NOCAutoQuery):
             raise Exception(u'Could not find dropdown with name \'{}\'. Please create it using /admin/'.format(name))
 
     def resolve_getRelationById(self, info, **kwargs):
+        log_resolver(self, 'resolve_getRelationById')
         relation_id = kwargs.get('relation_id')
         rel = nc.get_relationship_model(nc.graphdb.manager, relationship_id=relation_id)
         rel.relation_id = rel.id
@@ -202,6 +207,7 @@ class NOCRootQuery(NOCAutoQuery):
         return rel
 
     def resolve_getRoleRelationById(self, info, **kwargs):
+        log_resolver(self, 'resolve_getRoleRelationById')
         relation_id = kwargs.get('relation_id')
         rel = nc.models.RoleRelationship.get_relationship_model(nc.graphdb.manager, relationship_id=relation_id)
         rel.relation_id = rel.id
@@ -223,6 +229,7 @@ class NOCRootQuery(NOCAutoQuery):
         return rel
 
     def resolve_roles(self, info, **kwargs):
+        log_resolver(self, 'resolve_roles')
         filter = kwargs.get('filter')
         order_by = kwargs.get('orderBy')
 
@@ -248,6 +255,7 @@ class NOCRootQuery(NOCAutoQuery):
         return qs
 
     def resolve_getOrganizationContacts(self, info, **kwargs):
+        log_resolver(self, 'resolve_getOrganizationContacts')
         ret = []
 
         handle_id = kwargs.get('handle_id')
@@ -286,6 +294,7 @@ class NOCRootQuery(NOCAutoQuery):
         return ret
 
     def resolve_getGroupContacts(self, info, **kwargs):
+        log_resolver(self, 'resolve_getGroupContacts')
         ret = []
 
         handle_id = kwargs.get('handle_id')
@@ -320,6 +329,7 @@ class NOCRootQuery(NOCAutoQuery):
         return ret
 
     def resolve_getAvailableRoleGroups(self, info, **kwargs):
+        log_resolver(self, 'resolve_getAvailableRoleGroups')
         ret = []
 
         if info.context and info.context.user.is_authenticated:
@@ -339,6 +349,7 @@ class NOCRootQuery(NOCAutoQuery):
 
 
     def resolve_getRolesFromRoleGroup(self, info, **kwargs):
+        log_resolver(self, 'resolve_getRolesFromRoleGroup')
         ret = []
         name = kwargs.get('name', DEFAULT_ROLEGROUP_NAME)
 
@@ -359,12 +370,13 @@ class NOCRootQuery(NOCAutoQuery):
         return ret
 
     def resolve_checkExistentOrganizationId(self, info, **kwargs):
+        log_resolver(self, 'resolve_checkExistentOrganizationId')
         # django dropdown resolver
         organization_id = kwargs.get('organization_id')
         handle_id = kwargs.get('handle_id', None)
 
         ret = nc.models.OrganizationModel.check_existent_organization_id(organization_id, handle_id, nc.graphdb.manager)
-        
+
         return ret
 
     class NIMeta:

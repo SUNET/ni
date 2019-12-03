@@ -7,6 +7,10 @@ import logging
 import norduniclient as nc
 import re
 
+import logging
+import pprint
+import os
+
 import apps.noclook.vakt.utils as sriutils
 
 from apps.noclook import activitylog, helpers
@@ -37,6 +41,13 @@ NIMETA_LOGICAL  = 'logical'
 NIMETA_RELATION = 'relation'
 NIMETA_PHYSICAL = 'physical'
 NIMETA_LOCATION = 'location'
+
+def log_resolver(classname, resolver):
+    line = '{}: {}'.format(classname, resolver)
+
+    with open(f'/app/log/graphql-resolvers.log', 'a') as f:
+        f.write('\n')
+        f.write(line)
 
 class User(DjangoObjectType):
     '''
@@ -80,6 +91,7 @@ class NIRelationType(graphene.ObjectType):
     nidata = graphene.List(DictEntryType)
 
     def resolve_relation_id(self, info, **kwargs):
+        log_resolver(type(self), 'resolve_relation_id')
         self.relation_id = self.id
 
         return self.relation_id
@@ -88,6 +100,7 @@ class NIRelationType(graphene.ObjectType):
         '''
         Is just the same than old resolve_nidata, but it doesn't resolve the node
         '''
+        log_resolver(type(self), 'resolve_nidata')
         ret = []
 
         alldata = self.data
@@ -98,9 +111,11 @@ class NIRelationType(graphene.ObjectType):
         return ret
 
     def resolve_start(self, info, **kwargs):
+        log_resolver(type(self), 'resolve_start')
         return NodeHandle.objects.get(handle_id=self.start['handle_id'])
 
     def resolve_end(self, info, **kwargs):
+        log_resolver(type(self), 'resolve_end')
         return NodeHandle.objects.get(handle_id=self.end['handle_id'])
 
     @classmethod
@@ -268,6 +283,7 @@ class NIObjectType(DjangoObjectType):
         '''
         Resolver for incoming relationships for the node
         '''
+        log_resolver(type(self), 'resolve_incoming')
         incoming_rels = self.get_node().incoming
         ret = []
         for rel_name, rel_list in incoming_rels.items():
@@ -282,6 +298,7 @@ class NIObjectType(DjangoObjectType):
         '''
         Resolver for outgoing relationships for the node
         '''
+        log_resolver(type(self), 'resolve_outgoing')
         outgoing_rels = self.get_node().outgoing
         ret = []
         for rel_name, rel_list in outgoing_rels.items():
@@ -293,6 +310,7 @@ class NIObjectType(DjangoObjectType):
         return ret
 
     def resolve_comments(self, info, **kwargs):
+        log_resolver(type(self), 'resolve_comments')
         handle_id = self.handle_id
         return Comment.objects.filter(object_pk=handle_id)
 
@@ -486,6 +504,7 @@ class NIObjectType(DjangoObjectType):
         type_name = cls.get_type_name()
 
         def generic_byid_resolver(self, info, **args):
+            log_resolver(cls, 'generic_byid_resolver')
             handle_id = args.get('handle_id')
             node_type = NodeType.objects.get(type=type_name)
 
@@ -525,6 +544,7 @@ class NIObjectType(DjangoObjectType):
         type_name = cls.get_type_name()
 
         def generic_list_resolver(self, info, **args):
+            log_resolver(cls, 'get_list_resolver')
             qs = NodeHandle.objects.none()
 
             if info.context and info.context.user.is_authenticated:
@@ -556,6 +576,7 @@ class NIObjectType(DjangoObjectType):
         type_name = cls.get_type_name()
 
         def generic_count_resolver(self, info, **args):
+            log_resolver(cls, 'get_count_resolver')
             qs = NodeHandle.objects.none()
 
             if info.context and info.context.user.is_authenticated:
@@ -629,6 +650,7 @@ class NIObjectType(DjangoObjectType):
             order to return an ordered node collection we have to query each
             node by its handle_id and append to a list.
             '''
+            log_resolver(cls, 'get_connection_resolver')
             ret = NodeHandle.objects.none()
             filter  = args.get('filter', None)
             orderBy = args.get('orderBy', None)
@@ -1065,6 +1087,7 @@ class NIRelationField(NIBasicField):
                 )
             )
         def resolve_node_relation(self, info, **kwargs):
+            log_resolver(self, 'resolve_node_relation')
             ret = []
             reldicts = self.get_node().relationships.get(rel_name, None)
 
@@ -1094,6 +1117,7 @@ class DeleteRelationship(relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         relation_id = input.get("relation_id", None)
         success = False
 
@@ -1318,6 +1342,7 @@ class AbstractNIMutation(relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         if not info.context or not info.context.user.is_authenticated:
             raise GraphQLAuthException()
 
@@ -1607,6 +1632,7 @@ class DeleteNIMutation(AbstractNIMutation):
 class MultipleMutation(relay.ClientIDMutation):
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         if not info.context or not info.context.user.is_authenticated:
             raise GraphQLAuthException()
 
@@ -1672,6 +1698,7 @@ class CompositeMutation(relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         # check if the user is authenticated
         if not info.context or not info.context.user.is_authenticated:
             raise GraphQLAuthException()

@@ -374,6 +374,7 @@ class NIOrganizationMutationFactory(NIMutationFactory):
 class CreateRole(DjangoModelFormMutation):
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         default_context = sriutils.get_default_context()
 
         # check it can write on this context
@@ -426,6 +427,7 @@ class DeleteRole(relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         handle_id = input.get("handle_id", None)
         success = False
 
@@ -743,6 +745,7 @@ class RoleRelationMutation(relay.ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
+        log_resolver(cls, 'mutate_and_get_payload')
         if not info.context or not info.context.user.is_authenticated:
             raise GraphQLAuthException()
 
