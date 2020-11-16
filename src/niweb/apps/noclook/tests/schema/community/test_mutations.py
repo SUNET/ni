@@ -503,20 +503,6 @@ class MultipleEntityTest(Neo4jGraphQLCommunityTest):
               affiliation_customer
               website
               organization_number
-              incoming{{
-                name
-                relation{{
-                  id
-                  start{{
-                    id
-                    node_name
-                  }}
-                  end{{
-                    id
-                    node_name
-                  }}
-                }}
-              }}
             }}
           }}
         }}
@@ -530,7 +516,6 @@ class MultipleEntityTest(Neo4jGraphQLCommunityTest):
         form_errors = result.data['create_organization']['errors']
         assert not form_errors, pformat(form_errors, indent=1)
         organization_id_2 = result.data['create_organization']['organization']['id']
-        incoming_relations = result.data['create_organization']['organization']['incoming']
 
         expected = OrderedDict([('create_organization',
               OrderedDict([('errors', None),
@@ -546,19 +531,7 @@ class MultipleEntityTest(Neo4jGraphQLCommunityTest):
                                           ('affiliation_customer', True),
                                           ('website', website),
                                           ('organization_number', organization_number),
-                                          ('incoming', incoming_relations)]))]))])
-
-        found_offspring = False
-        for relation in incoming_relations:
-            for k, relation_dict in relation.items():
-                if k == 'name' and relation_dict == 'Parent_of':
-                    start_id = relay.Node.from_global_id(relation['relation']['start']['id'])[1]
-                    org_id = relay.Node.from_global_id(organization_id)[1]
-
-                    if start_id == org_id:
-                        found_offspring = True
-
-        assert found_offspring, pformat(result.data, indent=1)
+                            ]))]))])
 
         assert not result.errors, pformat(result.errors, indent=1)
         assert result.data == expected, '{}\n!=\n{}'.format(
@@ -1232,19 +1205,6 @@ class ValidationTest(Neo4jGraphQLCommunityTest):
             organization{{
               id
               name
-              incoming{{
-                name
-                relation{{
-                  nidata{{
-                    name
-                    value
-                  }}
-                  start{{
-                    id
-                    node_name
-                  }}
-                }}
-              }}
             }}
           }}
         }}
@@ -1270,19 +1230,6 @@ class ValidationTest(Neo4jGraphQLCommunityTest):
             organization{{
               id
               name
-              incoming{{
-                name
-                relation{{
-                  nidata{{
-                    name
-                    value
-                  }}
-                  start{{
-                    id
-                    node_name
-                  }}
-                }}
-              }}
             }}
           }}
         }}

@@ -590,12 +590,6 @@ class ConnectionTest(Neo4jGraphQLCommunityTest):
               node{
                 handle_id
                 name
-                outgoing {
-                  name
-                  relation {
-                    id
-                  }
-                }
               }
             }
           }

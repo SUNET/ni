@@ -424,10 +424,6 @@ class NIObjectType(DjangoObjectType):
             **options
         )
 
-    nidata = graphene.List(DictEntryType, resolver=resolve_nidata)
-
-    incoming = graphene.List(DictRelationType)
-    outgoing = graphene.List(DictRelationType)
     comments = graphene.List(CommentType)
 
     @classmethod
@@ -445,34 +441,6 @@ class NIObjectType(DjangoObjectType):
                     interfaces.append(PhysicalLogical)
 
         return interfaces
-
-    def resolve_incoming(self, info, **kwargs):
-        '''
-        Resolver for incoming relationships for the node
-        '''
-        incoming_rels = self.get_node().incoming
-        ret = []
-        for rel_name, rel_list in incoming_rels.items():
-            for rel in rel_list:
-                relation_id = rel['relationship_id']
-                relation_model = nc.get_relationship_model(nc.graphdb.manager, relationship_id=relation_id)
-                ret.append(DictRelationType(name=rel_name, relation=relation_model))
-
-        return ret
-
-    def resolve_outgoing(self, info, **kwargs):
-        '''
-        Resolver for outgoing relationships for the node
-        '''
-        outgoing_rels = self.get_node().outgoing
-        ret = []
-        for rel_name, rel_list in outgoing_rels.items():
-            for rel in rel_list:
-                relation_id = rel['relationship_id']
-                rel = nc.get_relationship_model(nc.graphdb.manager, relationship_id=relation_id)
-                ret.append(DictRelationType(name=rel_name, relation=rel))
-
-        return ret
 
     def resolve_comments(self, info, **kwargs):
         handle_id = self.handle_id
