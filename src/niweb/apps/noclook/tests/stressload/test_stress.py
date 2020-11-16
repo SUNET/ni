@@ -226,7 +226,9 @@ query='''{query_value}'''
         fragment OrganizationRow_organization on Organization {{
           handle_id
           name
-          type
+          type{{
+            value
+          }}
           organization_id
           affiliation_customer
           affiliation_end_customer
@@ -237,18 +239,6 @@ query='''{query_value}'''
           parent_organization {{
             organization_id
             id
-          }}
-          incoming {{
-            name
-            relation {{
-              type
-              start {{
-                handle_id
-                node_name
-                id
-              }}
-              id
-            }}
           }}
         }}
         '''
@@ -318,7 +308,9 @@ query='''{query_value}'''
           handle_id
           first_name
           last_name
-          contact_type
+          contact_type{{
+            value
+          }}
           modified
           roles {{
             name
