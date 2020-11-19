@@ -947,8 +947,8 @@ class NIObjectType(DjangoObjectType):
                             q = cls.build_filter_query(filter, orderBy, fmt_type_name,
                                             apply_handle_id_order, revert_default_order,
                                             readable_ids)
-                            nodes = nc.query_to_list(nc.graphdb.manager, q)
-                            nodes = [ node['n'] for node in nodes]
+                            handle_ids = nc.query_to_list(nc.graphdb.manager, q)
+                            handle_ids = [ x['handle_id'] for x in handle_ids ]
 
                             neo4j_query_used = True
                         else:
@@ -958,17 +958,12 @@ class NIObjectType(DjangoObjectType):
                         if neo4j_query_used:
                             ret = []
 
-                            handle_ids = []
-                            for node in nodes:
-                                if node['handle_id'] not in handle_ids:
-                                    handle_ids.append(node['handle_id'])
-
                             for handle_id in handle_ids:
-                                nodeqs = qs.filter(handle_id=handle_id)
                                 try:
-                                    the_node = nodeqs.first()
-                                    if the_node:
-                                        ret.append(the_node)
+                                    the_node = NodeHandle.objects.get(
+                                        handle_id=handle_id
+                                    )
+                                    ret.append(the_node)
                                 except:
                                     pass # nothing to do if the qs doesn't have elements
 
@@ -1311,7 +1306,7 @@ class NIObjectType(DjangoObjectType):
             {optional_matches}
             {build_query}
             {filter_query}
-            RETURN n
+            RETURN n.handle_id as handle_id
             {order_query}
             """.format(node_match_clause=node_match_clause,
                         optional_matches=optional_matches,
