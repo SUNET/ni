@@ -226,7 +226,9 @@ query='''{query_value}'''
         fragment OrganizationRow_organization on Organization {{
           handle_id
           name
-          type
+          type{{
+            value
+          }}
           organization_id
           affiliation_customer
           affiliation_end_customer
@@ -260,16 +262,16 @@ query='''{query_value}'''
         mark1 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Organization list resolution with default order took {} seconds\n".format(mark1)
+        test_result = "Organization list resolution with default order;{}\n".format(mark1)
         self.write_to_log_file(test_result)
 
         # order by id: native django order
-        name_query = organizations_query.format(filter={}, order_by='name_DESC')
+        name_query = organizations_query.format(filter={}, order_by='organization_id_DESC')
         setup_code = self.setup_code.format(query_value=name_query)
         mark2 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Organization list resolution with name order took {} seconds\n".format(mark2)
+        test_result = "Organization list resolution with name order;{}\n".format(mark2)
         self.write_to_log_file(test_result)
 
         contacts_query = '''
@@ -318,7 +320,9 @@ query='''{query_value}'''
           handle_id
           first_name
           last_name
-          contact_type
+          contact_type{{
+            value
+          }}
           modified
           roles {{
             name
@@ -337,16 +341,16 @@ query='''{query_value}'''
         mark1 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Contact list resolution with default order took {} seconds\n".format(mark1)
+        test_result = "Contact list resolution with default order;{}\n".format(mark1)
         self.write_to_log_file(test_result)
 
         # order by id: native django order
-        name_query = contacts_query.format(filter={}, order_by='name_DESC')
+        name_query = contacts_query.format(filter={}, order_by='contact_type_DESC')
         setup_code = self.setup_code.format(query_value=name_query)
         mark2 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Contact list resolution with name order took {} seconds\n".format(mark2)
+        test_result = "Contact list resolution with name order;{}\n".format(mark2)
         self.write_to_log_file(test_result)
 
         groups_query = '''
@@ -386,7 +390,7 @@ query='''{query_value}'''
         mark1 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Group list resolution with default order took {} seconds\n".format(mark1)
+        test_result = "Group list resolution with default order;{}\n".format(mark1)
         self.write_to_log_file(test_result)
 
         # order by id: native django order
@@ -395,7 +399,7 @@ query='''{query_value}'''
         mark2 = timeit.Timer("""result = schema.execute(query, context=context); assert result.data""", \
             setup=setup_code).timeit(1)
 
-        test_result = "Group list resolution with name order took {} seconds\n".format(mark2)
+        test_result = "Group list resolution with name order;{}\n".format(mark2)
         self.write_to_log_file(test_result)
 
 @unittest.skipUnless(int(os.environ.get('STRESS_TEST', '0')) >= 1, skip_reason)
