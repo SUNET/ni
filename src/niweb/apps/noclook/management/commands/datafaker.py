@@ -19,8 +19,10 @@ class Command(BaseCommand):
         # Equipment and cables
         'Cable', 'Port', 'Host', 'Router', 'Switch',
         'Firewall', 'Host User', 'Optical Node', 'ODF', 'Unit',
+        'External Equipment',
         # Optical Layers
-        'Optical Link', 'Optical Multiplex Section', 'Optical Path',
+        'Optical Filter', 'Optical Link', 'Optical Multiplex Section',
+        'Optical Path',
         # Locations
         'Site', 'Room', 'Rack',
         # Services
@@ -160,6 +162,7 @@ class Command(BaseCommand):
             generator.create_router,
             generator.create_switch,
             generator.create_firewall,
+            generator.create_external_equipment,
             generator.create_optical_node,
             generator.create_odf,
         ]
@@ -182,6 +185,7 @@ class Command(BaseCommand):
         generator = NetworkFakeDataGenerator()
 
         create_funcs = [
+            generator.create_optical_filter,
             generator.create_optical_link,
             generator.create_optical_multiplex_section,
             generator.create_optical_path,

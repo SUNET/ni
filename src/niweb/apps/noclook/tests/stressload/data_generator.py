@@ -278,11 +278,11 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
             'OpticalNode': self.create_optical_node,
             'OpticalPath': self.create_optical_path,
             'OpticalLink': self.create_optical_link,
-            #'OpticalFilter': self.create_optical_filter,
+            'OpticalFilter': self.create_optical_filter,
             'Router': self.create_router,
             'Service': self.create_service,
             'Switch': self.create_switch,
-            #'ExternalEquipment': self.create_external_equipment,
+            'ExternalEquipment': self.create_external_equipment,
         }
 
         self.service_user_categories = {
@@ -732,6 +732,24 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
 
         return firewall
 
+    def create_external_equipment(self, name=None):
+        # create object
+        if not name:
+            name = '{}-{}'.format(
+                self.fake.safe_color_name(), self.fake.ean8())
+
+        extequ = self.create_host(name, "External Equipment", metatype=META_TYPES[0])
+
+        data = {
+            'max_number_of_ports': random.randint(5,25),
+        }
+
+        for key, value in data.items():
+            value = self.escape_quotes(value)
+            extequ.get_node().add_property(key, value)
+
+        return extequ
+
     def create_host_user(self, name=None):
         # create object
         if not name:
@@ -814,6 +832,36 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
             odf.get_node().add_property(key, value)
 
         return odf
+
+    def create_optical_filter(self, name=None):
+        # create object
+        if not name:
+            name = '{}-{}'.format(
+                self.fake.safe_color_name(), self.fake.ean8())
+
+        ofilter = self.get_or_create_node(
+            name, 'Optical Filter', META_TYPES[0])
+
+        # add context
+        self.add_network_context(ofilter)
+
+        # add data
+        operational_states = self.get_dropdown_keys('operational_states')
+
+        data = {
+            'rack_units': random.randint(1,10),
+            'rack_position': random.randint(1,10),
+            'rack_back': bool(random.getrandbits(1)),
+            'operational_state': random.choice(operational_states),
+            'description': self.fake.paragraph(),
+            'max_number_of_ports': random.randint(5,25),
+        }
+
+        for key, value in data.items():
+            value = self.escape_quotes(value)
+            ofilter.get_node().add_property(key, value)
+
+        return ofilter
 
     def create_optical_link(self, name=None):
         # create object
