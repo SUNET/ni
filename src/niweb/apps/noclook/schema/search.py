@@ -133,10 +133,15 @@ class SearchQueryConnection(graphene.relay.Connection):
                     # get handle_id from json
                     handle_id = element[json_id_attr]
                     nh = NodeHandle.objects.get(handle_id=handle_id)
+
+                    # add match_txt NINode attribute
+                    nh.match_txt = element.get('name', None)
+
                     list_elem = cls.wrap_node(nh, element)
                     ret.append(list_elem)
                 except:
-                    pass
+                    import traceback
+                    print(traceback.format_exc())
         return ret
 
 
