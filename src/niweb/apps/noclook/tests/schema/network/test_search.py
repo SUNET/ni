@@ -6,7 +6,8 @@ from niweb.schema import schema
 from pprint import pformat
 from apps.noclook.models import NodeHandle, NodeType
 from apps.noclook.tests.stressload.data_generator import \
-    CommunityFakeDataGenerator, NetworkFakeDataGenerator
+    CommunityFakeDataGenerator, NetworkFakeDataGenerator, \
+    PhysicalDataRelationMaker
 from . import Neo4jGraphQLNetworkTest
 
 import logging
@@ -96,11 +97,19 @@ class GlobalSearchTest(Neo4jGraphQLNetworkTest):
 class SearchPortTest(Neo4jGraphQLNetworkTest):
     def test_search_port(self):
         data_generator = NetworkFakeDataGenerator()
+        relation_maker = PhysicalDataRelationMaker()
 
         # get one of the ports
         common = 'test-0'
+        rack = data_generator.create_rack()
+        switch_with_ports = data_generator.create_switch()
+
         port1 = data_generator.create_port(name="{}1".format(common))
         port2 = data_generator.create_port(name="{}2".format(common))
+
+        relation_maker.add_has(data_generator.user, switch_with_ports, port1)
+        relation_maker.add_has(data_generator.user, switch_with_ports, port2)
+        relation_maker.add_location(data_generator.user, switch_with_ports, rack)
 
         # search common pattern
         search = common
