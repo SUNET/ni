@@ -220,7 +220,7 @@ class PortSearchConnection(SearchQueryConnection):
 
     class NIMetaType:
         context = sriutils.get_network_context()
-        search_view = search_simple_port_typeahead
+        search_view = search_port_typeahead
         ni_type = Port
         json_id_attr = 'handle_id'
 
