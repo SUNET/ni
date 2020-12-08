@@ -144,6 +144,7 @@ class NISwitchMutationFactory(NIMutationFactory):
             'responsible_group': responsible_relation_processor,
             'support_group': supports_relation_processor,
             'relationship_location': location_relation_processor,
+            'relationship_owner': owner_relation_processor,
         }
 
     class Meta:

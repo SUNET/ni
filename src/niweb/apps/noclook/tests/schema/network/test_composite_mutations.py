@@ -866,6 +866,11 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         location_id = relay.Node.to_global_id(str(location.node_type),
                                                 str(location.handle_id))
 
+        # get an owner
+        owner = generator.create_end_user()
+        owner_id = relay.Node.to_global_id(str(owner.node_type).replace(' ', ''),
+                                            str(owner.handle_id))
+
         # get two groups
         community_generator = CommunityFakeDataGenerator()
         group1 = community_generator.create_group()
@@ -939,6 +944,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 max_number_of_ports: {max_number_of_ports}
                 services_locked: {services_locked}
                 relationship_location: "{location_id}"
+                relationship_owner: "{owner_id}"
               }}
               create_subinputs:[
                 {{
@@ -973,6 +979,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 services_locked
                 services_checked
                 provider{{
+                  id
+                  name
+                }}
+                owner{{
                   id
                   name
                 }}
@@ -1049,7 +1059,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                     port_2_description=port_2_description, port_2_id=port_2_id,
                     rack_back=str(rack_back).lower(),
                     services_locked=str(services_locked).lower(),
-                    location_id=location_id)
+                    location_id=location_id, owner_id=owner_id)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
@@ -1094,6 +1104,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         check_support = created_switch['support_group']
         self.assertEqual(check_support['id'], group2_id)
 
+        # check owner
+        check_owner = created_switch['owner']
+        self.assertEqualIds(check_owner['id'], owner_id)
+
         # check ports data
 
         # check port_1 data
@@ -1128,6 +1142,11 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         provider = generator.create_provider()
         provider_id = relay.Node.to_global_id(str(provider.node_type),
                                             str(provider.handle_id))
+
+        # get another owner
+        owner = generator.create_end_user()
+        owner_id = relay.Node.to_global_id(str(owner.node_type).replace(' ', ''),
+                                            str(owner.handle_id))
 
         switch_name = "New Switch"
         switch_description = "Updated from graphql"
@@ -1173,6 +1192,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 contract_number: "{contract_number}"
                 max_number_of_ports: {max_number_of_ports}
                 services_locked: {services_locked}
+                relationship_owner: "{owner_id}"
               }}
             }}
           ){{
@@ -1193,6 +1213,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 services_checked
                 model
                 provider{{
+                  id
+                  name
+                }}
+                owner{{
                   id
                   name
                 }}
@@ -1230,7 +1254,8 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                     os_version=os_version, contract_number=contract_number,
                     max_number_of_ports=max_number_of_ports,
                     rack_back=str(rack_back).lower(),
-                    services_locked=str(services_locked).lower())
+                    services_locked=str(services_locked).lower(),
+                    owner_id=owner_id)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
@@ -1272,6 +1297,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         # check location
         check_location = updated_switch['location']
         self.assertEqual(check_location, None)
+
+        # check owner
+        check_owner = updated_switch['owner']
+        self.assertEqualIds(check_owner['id'], owner_id)
 
         # set empty group relations
         query = '''
