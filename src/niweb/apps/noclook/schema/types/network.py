@@ -247,6 +247,8 @@ class Switch(NIObjectType, PhysicalMixin):
     services_locked = NIBooleanField()
     services_checked = NIBooleanField()
     model = NIStringField()
+    owner = NISingleRelationField(field_type=(lambda: Relation),
+        rel_name="Owns", rel_method="_incoming")
 
     class NIMetaType:
         ni_type = 'Switch'
