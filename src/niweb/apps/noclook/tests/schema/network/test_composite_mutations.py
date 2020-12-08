@@ -820,8 +820,9 @@ class PortCableTest(Neo4jGraphQLNetworkTest):
 class SwitchTest(Neo4jGraphQLNetworkTest):
     def test_switch(self):
         # create test switchtype and test query
+        switch_modelname = "Testlink"
         test_switchtype = SwitchType(
-            name="Testlink",
+            name=switch_modelname,
             ports="80,8000"
         )
         test_switchtype.save()
@@ -991,6 +992,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 os_version
                 contract_number
                 max_number_of_ports
+                model
                 ports{{
                   id
                   name
@@ -1074,6 +1076,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(created_switch['contract_number'], contract_number)
         self.assertEqual(created_switch['max_number_of_ports'], max_number_of_ports)
         self.assertEqual(created_switch['services_locked'], services_locked)
+        self.assertEqual(created_switch['model'], switch_modelname)
 
         # check provider
         check_provider = created_switch['provider']
@@ -1188,6 +1191,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 rack_back
                 services_locked
                 services_checked
+                model
                 provider{{
                   id
                   name
@@ -1251,6 +1255,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(updated_switch['contract_number'], contract_number)
         self.assertEqual(updated_switch['max_number_of_ports'], max_number_of_ports)
         self.assertEqual(updated_switch['services_locked'], services_locked)
+        self.assertEqual(updated_switch['model'], switch_modelname)
 
         # check provider
         check_provider = updated_switch['provider']
