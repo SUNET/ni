@@ -320,6 +320,8 @@ class OpticalNode(NIObjectType, PhysicalMixin):
     rack_back = NIBooleanField()
     operational_state = NIChoiceField(dropdown_name="operational_states", \
         type_kwargs={ 'required': True })
+    link = NIStringField()
+    ots = NIStringField()
 
     class NIMetaType:
         ni_type = 'Optical Node'
