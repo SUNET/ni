@@ -7070,7 +7070,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         mutation{{
           composite_service(input:{{
             create_input:{{
-              name: "{srv_name}"
               service_type: "{srv_service_type}"
               operational_state: "{srv_operational_state}"
               description: "{srv_description}"
@@ -7223,7 +7222,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         ## creation
         # data service
         a_service = data_generator.create_service()
-        srv_name = a_service.get_node().data.get("name")
         srv_service_type = service_type_create
         srv_operational_state = opstate_create
         srv_description = a_service.get_node().data.get("description")
@@ -7303,7 +7301,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
           composite_service(input:{{
             {main_input}:{{
               {main_input_id}
-              name: "{srv_name}"
               service_type: "{srv_service_type}"
               operational_state: "{srv_operational_state}"
               description: "{srv_description}"
@@ -7435,7 +7432,7 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
 
         query = query_t.format(main_input=main_input,
             main_input_id=main_input_id, main_payload=main_payload,
-            srv_name=srv_name, srv_operational_state=srv_operational_state,
+            srv_operational_state=srv_operational_state,
             srv_description=srv_description, srv_service_type=srv_service_type,
             project_end_date=project_end_date,
             decommissioned_date=decommissioned_date,
@@ -7487,7 +7484,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         check_service = all_data[main_payload]['service']
         service_id = check_service['id']
 
-        self.assertEquals(check_service['name'], srv_name)
         self.assertEquals(check_service['operational_state']['value'],
                             srv_operational_state)
         self.assertEquals(check_service['description'], srv_description)
@@ -7541,7 +7537,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         ## update
         # data service
         a_service = data_generator.create_service()
-        srv_name = a_service.get_node().data.get("name")
         srv_service_type = service_type_update
         srv_operational_state = opstate_update
         srv_description = a_service.get_node().data.get("description")
@@ -7603,7 +7598,7 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
 
         query = query_t.format(main_input=main_input,
             main_input_id=main_input_id, main_payload=main_payload,
-            srv_name=srv_name, srv_operational_state=srv_operational_state,
+            srv_operational_state=srv_operational_state,
             srv_description=srv_description, srv_service_type=srv_service_type,
             project_end_date=project_end_date,
             decommissioned_date=decommissioned_date,
@@ -7655,7 +7650,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         check_service = all_data[main_payload]['service']
         service_id = check_service['id']
 
-        self.assertEquals(check_service['name'], srv_name)
         self.assertEquals(check_service['operational_state']['value'],
                             srv_operational_state)
         self.assertEquals(check_service['description'], srv_description)
