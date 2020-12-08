@@ -246,6 +246,7 @@ class Switch(NIObjectType, PhysicalMixin):
                             rel_method='_outgoing')
     services_locked = NIBooleanField()
     services_checked = NIBooleanField()
+    model = NIStringField()
 
     class NIMetaType:
         ni_type = 'Switch'
