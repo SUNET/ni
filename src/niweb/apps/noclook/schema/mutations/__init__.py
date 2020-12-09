@@ -51,18 +51,22 @@ class NOCRootMutation(graphene.ObjectType):
     create_customer = NICustomersMutationFactory.get_create_mutation().Field()
     update_customer = NICustomersMutationFactory.get_update_mutation().Field()
     delete_customer = NICustomersMutationFactory.get_delete_mutation().Field()
+    composite_customer = CompositeCustomerMutation.Field()
 
     create_endUser = NIEndUsersMutationFactory.get_create_mutation().Field()
     update_endUser = NIEndUsersMutationFactory.get_update_mutation().Field()
     delete_endUser = NIEndUsersMutationFactory.get_delete_mutation().Field()
+    composite_endUser = CompositeEndUserMutation.Field()
 
     create_provider = NIProvidersMutationFactory.get_create_mutation().Field()
     update_provider = NIProvidersMutationFactory.get_update_mutation().Field()
     delete_provider = NIProvidersMutationFactory.get_delete_mutation().Field()
+    composite_provider = CompositeProviderMutation.Field()
 
     create_siteOwner = NISiteOwnersMutationFactory.get_create_mutation().Field()
     update_siteOwner = NISiteOwnersMutationFactory.get_update_mutation().Field()
     delete_siteOwner = NISiteOwnersMutationFactory.get_delete_mutation().Field()
+    composite_siteOwner = CompositeSiteOwnerMutation.Field()
 
     # Cables and Equipment
     create_port = NIPortMutationFactory.get_create_mutation().Field()
