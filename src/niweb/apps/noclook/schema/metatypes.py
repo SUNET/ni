@@ -4,6 +4,7 @@ __author__ = 'ffuentes'
 from apps.noclook import helpers
 from apps.noclook.models import NodeHandle, NodeType
 from apps.noclook.vakt import utils as sriutils
+from apps.noclook.schema.fields import Choice
 from django.db.models import Q
 
 import graphene
@@ -222,6 +223,7 @@ class NINode(graphene.Node):
 class PhysicalLogical(NINode):
     dependents = graphene.List(lambda:Logical)
     provider = graphene.Field(lambda:Relation)
+    operational_state = graphene.Field(lambda:Choice)
 
 
 class Logical(PhysicalLogical):
