@@ -180,7 +180,7 @@ class Host(NIObjectType, PhysicalLogicalMixin):
 
     class NIMetaType:
         ni_type = 'Host'
-        ni_metatype = NIMETA_LOGICAL
+        ni_metatype = NIMETA_PHYSICAL
         context_method = sriutils.get_network_context
 
 
