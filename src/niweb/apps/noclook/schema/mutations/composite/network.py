@@ -48,6 +48,7 @@ class CompositeSiteOwnerMutation(CompositeMutation):
         main_mutation_f = NISiteOwnersMutationFactory
         context = sriutils.get_network_context()
         has_creation = True
+        include_metafields = ('responsible_for')
 
 
 ## Equipment and cables
