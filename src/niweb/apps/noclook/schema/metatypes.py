@@ -238,7 +238,7 @@ class Relation(NINode):
     uses = graphene.List(lambda:Logical)
     provides = graphene.Field(NINode) # Physical or Logical
     owns = graphene.List(lambda:Physical)
-    responsible_for = graphene.Field(lambda:Location)
+    responsible_for = graphene.List(lambda:Location)
 
 
 class Physical(PhysicalLogical):
@@ -399,7 +399,7 @@ class RelationMixin:
             info, self.get_node(), 'get_owns', 'Owns')
 
     def resolve_responsible_for(self, info, **kwargs):
-        return ResolverUtils.single_relation_resolver(
+        return ResolverUtils.multiple_relation_resolver(
             info, self.get_node(), 'get_responsible_for', 'Responsible_for')
 
     @classmethod
