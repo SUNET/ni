@@ -14,6 +14,181 @@ from graphene import relay
 
 import random
 
+
+## Organizations
+class CustomerCompositeTest(Neo4jGraphQLNetworkTest):
+    def test_composite_customer(self):
+        data_generator = NetworkFakeDataGenerator()
+
+        ## creation
+        # customer data
+        a_customer = data_generator.create_customer()
+        customer_name = a_customer.get_node().data.get("name")
+        customer_url = a_customer.get_node().data.get("url")
+        customer_description = a_customer.get_node().data.get("description")
+        a_customer.delete()
+
+        # create equipment
+        # create host
+        host = data_generator.create_host()
+        host_id = relay.Node.to_global_id(str(host.node_type),
+                                            str(host.handle_id))
+        host_name = "Test host"
+        host_opstate = host.get_node().data.get("operational_state")
+
+        # create switch
+        switch = data_generator.create_switch()
+        switch_id = relay.Node.to_global_id(str(switch.node_type),
+                                            str(switch.handle_id))
+        switch_name = "Test switch"
+        switch_opstate = switch.get_node().data.get("operational_state")
+
+        # create service
+        service = data_generator.create_service()
+        srv_id = relay.Node.to_global_id(str(service.node_type),
+                                            str(service.handle_id))
+        srv_name = service.get_node().data.get("name")
+        srv_service_type = service.get_node().data.get("service_type")
+        srv_operational_state = service.get_node().data\
+            .get("operational_state")
+
+        srv_project_end_date = service.get_node().data\
+            .get("project_end_date", data_generator.get_random_date())
+        srv_decommissioned_date = service.get_node().data\
+            .get("decommissioned_date", data_generator.get_random_date())
+        srv_description = service.get_node().data.get("description")
+
+        main_input = "create_input"
+        main_input_id = ""
+        main_payload = 'created'
+
+        query_t = """
+        mutation{{
+          composite_customer(input:{{
+            {main_input}: {{
+              {main_input_id}
+              name: "{customer_name}"
+              url: "{customer_url}"
+              description: "{customer_description}"
+            }}
+            update_owns_switch:[{{
+              id: "{switch_id}"
+        	  name: "{switch_name}"
+              operational_state: "{switch_opstate}"
+              skip_update: true
+            }}]
+            update_owns_host:[{{
+              id: "{host_id}"
+              name: "{host_name}"
+              operational_state: "{host_opstate}"
+              skip_update: true
+            }}]
+            update_uses_service:[{{
+              id: "{srv_id}"
+              name: "{srv_name}"
+              service_type: "{srv_service_type}"
+              operational_state: "{srv_operational_state}"
+              skip_update: true
+            }}]
+          }}){{
+            created{{
+              errors{{
+                field
+                messages
+              }}
+              customer{{
+                id
+                name
+                owns{{
+                  __typename
+                  id
+                  name
+                }}
+                uses{{
+                  __typename
+                  id
+                  name
+                  ...on Service{{
+                    operational_state{{
+                      value
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            owns_switch_updated{{
+              errors{{
+                field
+                messages
+              }}
+              switch{{
+                id
+              }}
+            }}
+            owns_host_updated{{
+              errors{{
+                field
+                messages
+              }}
+              host{{
+                id
+              }}
+            }}
+            uses_service_updated{{
+              errors{{
+                field
+                messages
+              }}
+              service{{
+                id
+              }}
+            }}
+          }}
+        }}
+        """
+
+        query = query_t.format(
+            main_input=main_input, main_input_id=main_input_id,
+            main_payload=main_payload, customer_name=customer_name,
+            customer_url=customer_url,
+            customer_description=customer_description, switch_id=switch_id,
+            switch_name=switch_name, switch_opstate=switch_opstate,
+            host_id=host_id, host_name=host_name, host_opstate=host_opstate,
+            srv_id=srv_id, srv_name=srv_name, srv_service_type=srv_service_type,
+            srv_operational_state=srv_operational_state
+        )
+
+        result = schema.execute(query, context=self.context)
+        assert not result.errors, pformat(result.errors, indent=1)
+
+        # check for errors
+        all_data = result.data['composite_customer']
+        created_errors = all_data[main_payload]['errors']
+        assert not created_errors, pformat(created_errors, indent=1)
+
+        submutations = {
+            'owns_switch_updated': None,
+            'owns_host_updated': None,
+            'uses_service_updated': None,
+        }
+
+        for k,v in submutations.items():
+            if all_data[k]:
+                item = None
+
+                try:
+                    all_data[k][0]
+                    for item in all_data[k]:
+                        submutations[k] = item['errors']
+                        assert not submutations[k], \
+                            pformat(submutations[k], indent=1)
+                except KeyError:
+                    item = all_data[k]
+                    submutations[k] = item['errors']
+                    assert not submutations[k], \
+                        pformat(submutations[k], indent=1)
+
+
 ## Equipment and cables
 class PortCompositeTest(Neo4jGraphQLNetworkTest):
     def test_composite_port(self):

@@ -416,6 +416,13 @@ class RelationMixin:
     @classmethod
     def link_owns(cls, user, relation_nh, physical_nh):
         physical_node = physical_nh.get_node()
+
+        # check the special case of a host: if it is we should convert it to
+        # a physical host
+        if physical_nh.node_type.type == 'Host':
+            physical_nh, physical_node = \
+                helpers.logical_to_physical(user, physical_nh.handle_id)
+
         relation_handle_id = relation_nh.handle_id
         helpers.set_owner(user, physical_node, relation_handle_id)
 
