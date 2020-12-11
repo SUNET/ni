@@ -6,6 +6,7 @@ from graphene.types import Scalar
 from io import StringIO
 
 import graphene
+import json
 
 class IPAddr(Scalar):
     '''IPAddr scalar to be matched with the IPAddrField in a django form'''

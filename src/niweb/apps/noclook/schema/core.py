@@ -505,7 +505,7 @@ class NIObjectType(DjangoObjectType):
     @classmethod
     def can_create(cls):
         can_create = cls.get_from_nimetatype("can_create")
-        if can_create == None:
+        if can_create is None:
             can_create = True
 
         return can_create
@@ -2183,6 +2183,9 @@ class CompositeMutation(relay.ClientIDMutation):
 
                     # get all types that implement metafield_interface
                     # we need to add a mutation for each one
+                    if not metafield_interface in subclasses_interfaces:
+                        continue
+
                     subclass_list = subclasses_interfaces[metafield_interface]
 
                     for a_subclass in subclass_list:

@@ -240,6 +240,9 @@ class NOCRootQuery(NOCAutoQuery):
     getMetatypes = graphene.List(MetaType)
     getTypesForMetatype = graphene.List(TypeInfo,
                             metatype=graphene.Argument(MetaType))
+    getTypesForMetatypes = graphene.List(TypeInfo,
+                            metatypes=graphene.Argument(graphene.List(
+                                MetaType)))
 
     # activity connection
     getAvailableContexts = graphene.List(graphene.String,
@@ -495,14 +498,34 @@ class NOCRootQuery(NOCAutoQuery):
                             all_name = NOCRootQuery.\
                                 graph_all_type_resolvers[clazz]['field_name']
 
+                            can_create = clazz.can_create()
+
                             elem = TypeInfo(
                                 type_name=clazz,
                                 connection_name=connection_name,
                                 byid_name=byid_name,
                                 all_name=all_name,
+                                can_create=can_create,
                             )
 
                             classes.append(elem)
+
+            return classes
+        else:
+            raise GraphQLAuthException()
+
+
+    def resolve_getTypesForMetatypes(self, info, **kwargs):
+        if info.context and info.context.user.is_authenticated:
+            classes = []
+            filter_metatypes = kwargs.get('metatypes')
+
+            for filter_metatype in filter_metatypes:
+                sub_kwargs = { 'metatype': filter_metatype }
+                subret = NOCRootQuery.resolve_getTypesForMetatype(self,
+                    info, **sub_kwargs)
+
+                classes = classes + subret
 
             return classes
         else:

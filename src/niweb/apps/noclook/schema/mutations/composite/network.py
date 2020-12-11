@@ -5,6 +5,52 @@ from ..network import *
 from ..community import *
 
 
+## Organizations
+class CompositeCustomerMutation(CompositeMutation):
+    class Input:
+        pass
+
+    class NIMetaClass:
+        graphql_type = Customer
+        main_mutation_f = NICustomersMutationFactory
+        context = sriutils.get_network_context()
+        has_creation = True
+
+
+class CompositeEndUserMutation(CompositeMutation):
+    class Input:
+        pass
+
+    class NIMetaClass:
+        graphql_type = EndUser
+        main_mutation_f = NIEndUsersMutationFactory
+        context = sriutils.get_network_context()
+        has_creation = True
+
+
+class CompositeProviderMutation(CompositeMutation):
+    class Input:
+        pass
+
+    class NIMetaClass:
+        graphql_type = Provider
+        main_mutation_f = NIProvidersMutationFactory
+        context = sriutils.get_network_context()
+        has_creation = True
+
+
+class CompositeSiteOwnerMutation(CompositeMutation):
+    class Input:
+        pass
+
+    class NIMetaClass:
+        graphql_type = SiteOwner
+        main_mutation_f = NISiteOwnersMutationFactory
+        context = sriutils.get_network_context()
+        has_creation = True
+        include_metafields = ('responsible_for')
+
+
 ## Equipment and cables
 class CompositePortMutation(CompositeMutation):
     class Input:
@@ -20,7 +66,7 @@ class CompositePortMutation(CompositeMutation):
         main_mutation_f = NIPortMutationFactory
         secondary_mutation_f = NICableMutationFactory
         context = sriutils.get_network_context()
-        include_metafields = ('parent')
+        include_metafields = ('parent', 'dependents')
 
 
 class CompositeCableMutation(CompositeMutation):

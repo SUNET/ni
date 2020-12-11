@@ -777,6 +777,8 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
             'rack_units': random.randint(1,10),
             'rack_position': random.randint(1,10),
             'rack_back': bool(random.getrandbits(1)),
+            'link': self.fake.license_plate(),
+            'ots': self.fake.company(),
         }
 
         for key, value in data.items():

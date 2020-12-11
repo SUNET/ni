@@ -4,6 +4,7 @@ __author__ = 'ffuentes'
 from apps.noclook import helpers
 from apps.noclook.models import NodeHandle, NodeType
 from apps.noclook.vakt import utils as sriutils
+from apps.noclook.schema.fields import Choice
 from django.db.models import Q
 
 import graphene
@@ -222,6 +223,7 @@ class NINode(graphene.Node):
 class PhysicalLogical(NINode):
     dependents = graphene.List(lambda:Logical)
     provider = graphene.Field(lambda:Relation)
+    operational_state = graphene.Field(lambda:Choice)
 
 
 class Logical(PhysicalLogical):
@@ -234,9 +236,9 @@ class Relation(NINode):
     name = graphene.String(required= True)
     with_same_name = graphene.List(lambda:Relation)
     uses = graphene.List(lambda:Logical)
-    provides = graphene.Field(NINode) # Physical or Logical
+    provides = graphene.List(lambda:PhysicalLogical) # Physical or Logical
     owns = graphene.List(lambda:Physical)
-    responsible_for = graphene.Field(lambda:Location)
+    responsible_for = graphene.List(lambda:Location)
 
 
 class Physical(PhysicalLogical):
@@ -389,7 +391,7 @@ class RelationMixin:
             info, self.get_node(), 'get_uses', 'Uses')
 
     def resolve_provides(self, info, **kwargs):
-        return ResolverUtils.single_relation_resolver(
+        return ResolverUtils.multiple_relation_resolver(
             info, self.get_node(), 'get_provides', 'Provides')
 
     def resolve_owns(self, info, **kwargs):
@@ -397,7 +399,7 @@ class RelationMixin:
             info, self.get_node(), 'get_owns', 'Owns')
 
     def resolve_responsible_for(self, info, **kwargs):
-        return ResolverUtils.single_relation_resolver(
+        return ResolverUtils.multiple_relation_resolver(
             info, self.get_node(), 'get_responsible_for', 'Responsible_for')
 
     @classmethod
@@ -414,6 +416,13 @@ class RelationMixin:
     @classmethod
     def link_owns(cls, user, relation_nh, physical_nh):
         physical_node = physical_nh.get_node()
+
+        # check the special case of a host: if it is we should convert it to
+        # a physical host
+        if physical_nh.node_type.type == 'Host':
+            physical_nh, physical_node = \
+                helpers.logical_to_physical(user, physical_nh.handle_id)
+
         relation_handle_id = relation_nh.handle_id
         helpers.set_owner(user, physical_node, relation_handle_id)
 
