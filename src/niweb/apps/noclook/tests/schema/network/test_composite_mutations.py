@@ -14,6 +14,181 @@ from graphene import relay
 
 import random
 
+
+## Organizations
+class CustomerCompositeTest(Neo4jGraphQLNetworkTest):
+    def test_composite_customer(self):
+        data_generator = NetworkFakeDataGenerator()
+
+        ## creation
+        # customer data
+        a_customer = data_generator.create_customer()
+        customer_name = a_customer.get_node().data.get("name")
+        customer_url = a_customer.get_node().data.get("url")
+        customer_description = a_customer.get_node().data.get("description")
+        a_customer.delete()
+
+        # create equipment
+        # create host
+        host = data_generator.create_host()
+        host_id = relay.Node.to_global_id(str(host.node_type),
+                                            str(host.handle_id))
+        host_name = "Test host"
+        host_opstate = host.get_node().data.get("operational_state")
+
+        # create switch
+        switch = data_generator.create_switch()
+        switch_id = relay.Node.to_global_id(str(switch.node_type),
+                                            str(switch.handle_id))
+        switch_name = "Test switch"
+        switch_opstate = switch.get_node().data.get("operational_state")
+
+        # create service
+        service = data_generator.create_service()
+        srv_id = relay.Node.to_global_id(str(service.node_type),
+                                            str(service.handle_id))
+        srv_name = service.get_node().data.get("name")
+        srv_service_type = service.get_node().data.get("service_type")
+        srv_operational_state = service.get_node().data\
+            .get("operational_state")
+
+        srv_project_end_date = service.get_node().data\
+            .get("project_end_date", data_generator.get_random_date())
+        srv_decommissioned_date = service.get_node().data\
+            .get("decommissioned_date", data_generator.get_random_date())
+        srv_description = service.get_node().data.get("description")
+
+        main_input = "create_input"
+        main_input_id = ""
+        main_payload = 'created'
+
+        query_t = """
+        mutation{{
+          composite_customer(input:{{
+            {main_input}: {{
+              {main_input_id}
+              name: "{customer_name}"
+              url: "{customer_url}"
+              description: "{customer_description}"
+            }}
+            update_owns_switch:[{{
+              id: "{switch_id}"
+        	  name: "{switch_name}"
+              operational_state: "{switch_opstate}"
+              skip_update: true
+            }}]
+            update_owns_host:[{{
+              id: "{host_id}"
+              name: "{host_name}"
+              operational_state: "{host_opstate}"
+              skip_update: true
+            }}]
+            update_uses_service:[{{
+              id: "{srv_id}"
+              name: "{srv_name}"
+              service_type: "{srv_service_type}"
+              operational_state: "{srv_operational_state}"
+              skip_update: true
+            }}]
+          }}){{
+            created{{
+              errors{{
+                field
+                messages
+              }}
+              customer{{
+                id
+                name
+                owns{{
+                  __typename
+                  id
+                  name
+                }}
+                uses{{
+                  __typename
+                  id
+                  name
+                  ...on Service{{
+                    operational_state{{
+                      value
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            owns_switch_updated{{
+              errors{{
+                field
+                messages
+              }}
+              switch{{
+                id
+              }}
+            }}
+            owns_host_updated{{
+              errors{{
+                field
+                messages
+              }}
+              host{{
+                id
+              }}
+            }}
+            uses_service_updated{{
+              errors{{
+                field
+                messages
+              }}
+              service{{
+                id
+              }}
+            }}
+          }}
+        }}
+        """
+
+        query = query_t.format(
+            main_input=main_input, main_input_id=main_input_id,
+            main_payload=main_payload, customer_name=customer_name,
+            customer_url=customer_url,
+            customer_description=customer_description, switch_id=switch_id,
+            switch_name=switch_name, switch_opstate=switch_opstate,
+            host_id=host_id, host_name=host_name, host_opstate=host_opstate,
+            srv_id=srv_id, srv_name=srv_name, srv_service_type=srv_service_type,
+            srv_operational_state=srv_operational_state
+        )
+
+        result = schema.execute(query, context=self.context)
+        assert not result.errors, pformat(result.errors, indent=1)
+
+        # check for errors
+        all_data = result.data['composite_customer']
+        created_errors = all_data[main_payload]['errors']
+        assert not created_errors, pformat(created_errors, indent=1)
+
+        submutations = {
+            'owns_switch_updated': None,
+            'owns_host_updated': None,
+            'uses_service_updated': None,
+        }
+
+        for k,v in submutations.items():
+            if all_data[k]:
+                item = None
+
+                try:
+                    all_data[k][0]
+                    for item in all_data[k]:
+                        submutations[k] = item['errors']
+                        assert not submutations[k], \
+                            pformat(submutations[k], indent=1)
+                except KeyError:
+                    item = all_data[k]
+                    submutations[k] = item['errors']
+                    assert not submutations[k], \
+                        pformat(submutations[k], indent=1)
+
+
 ## Equipment and cables
 class PortCompositeTest(Neo4jGraphQLNetworkTest):
     def test_composite_port(self):
@@ -54,16 +229,16 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
               port_type: "{port_type}"
               description: "{port_description}"
             }}
-            create_subinputs:[{{
+            create_subinputs:{{
               name: "{cable_name}"
               cable_type: "{cable_type}"
               description: "{cable_description}"
-            }}]
-            create_parent_port:[{{
+            }}
+            create_parent_port:{{
               name: "{pport_name}"
               port_type: "{pport_type}"
               description: "{pport_description}"
-            }}]
+            }}
           }}){{
             created{{
               errors{{
@@ -142,18 +317,18 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
         created_errors = result.data['composite_port']['created']['errors']
         assert not created_errors, pformat(created_errors, indent=1)
 
-        for subcreated in result.data['composite_port']['subcreated']:
-            assert not subcreated['errors'], pformat(subcreated['errors'], indent=1)
+        subcreated = result.data['composite_port']['subcreated']
+        assert not subcreated['errors'], pformat(subcreated['errors'], indent=1)
 
-        for subcreated in result.data['composite_port']['parent_port_created']:
-            assert not subcreated['errors'], pformat(subcreated['errors'], indent=1)
+        subcreated = result.data['composite_port']['parent_port_created']
+        assert not subcreated['errors'], pformat(subcreated['errors'], indent=1)
 
 
         # get the ids
         result_data = result.data['composite_port']
         port_id = result_data['created']['port']['id']
-        cable_id = result_data['subcreated'][0]['cable']['id']
-        pport_id = result_data['parent_port_created'][0]['port']['id']
+        cable_id = result_data['subcreated']['cable']['id']
+        pport_id = result_data['parent_port_created']['port']['id']
 
         # check the integrity of the data
         created_data = result_data['created']['port']
@@ -164,16 +339,16 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(created_data['description'], port_description)
 
         # check their relations id
-        test_cable_id = created_data['connected_to'][0]['id']
-        test_pport_id = created_data['parent'][0]['id']
+        test_cable_id = created_data['connected_to']['id']
+        test_pport_id = created_data['parent']['id']
 
         self.assertEqual(cable_id, test_cable_id)
         self.assertEqual(pport_id, test_pport_id)
 
         # check cable in both payload and metatype attribute
         check_cables = [
-            result_data['subcreated'][0]['cable'],
-            created_data['connected_to'][0],
+            result_data['subcreated']['cable'],
+            created_data['connected_to'],
         ]
 
         for check_cable in check_cables:
@@ -183,8 +358,8 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
 
         # check parent port in payload and in metatype attribute
         created_parents = [
-            result_data['parent_port_created'][0]['port'],
-            created_data['parent'][0],
+            result_data['parent_port_created']['port'],
+            created_data['parent'],
         ]
 
         for created_parent in created_parents:
@@ -217,18 +392,18 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
               port_type: "{port_type}"
               description: "{port_description}"
             }}
-            update_subinputs:[{{
+            update_subinputs:{{
               id: "{cable_id}"
               name: "{cable_name}"
               cable_type: "{cable_type}"
               description: "{cable_description}"
-            }}]
-            update_parent_port:[{{
+            }}
+            update_parent_port:{{
               id: "{pport_id}"
               name: "{pport_name}"
               port_type: "{pport_type}"
               description: "{pport_description}"
-            }}]
+            }}
           }}){{
             updated{{
               errors{{
@@ -309,11 +484,11 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
         updated_errors = result.data['composite_port']['updated']['errors']
         assert not updated_errors, pformat(updated_errors, indent=1)
 
-        for subupdated in result.data['composite_port']['subupdated']:
-            assert not subupdated['errors'], pformat(subupdated['errors'], indent=1)
+        subupdated = result.data['composite_port']['subupdated']
+        assert not subupdated['errors'], pformat(subupdated['errors'], indent=1)
 
-        for subupdated in result.data['composite_port']['parent_port_updated']:
-            assert not subupdated['errors'], pformat(subupdated['errors'], indent=1)
+        subupdated = result.data['composite_port']['parent_port_updated']
+        assert not subupdated['errors'], pformat(subupdated['errors'], indent=1)
 
         # check the integrity of the data
         result_data = result.data['composite_port']
@@ -325,16 +500,16 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(updated_data['description'], port_description)
 
         # check their relations id
-        test_cable_id = updated_data['connected_to'][0]['id']
-        test_pport_id = updated_data['parent'][0]['id']
+        test_cable_id = updated_data['connected_to']['id']
+        test_pport_id = updated_data['parent']['id']
 
         self.assertEqual(cable_id, test_cable_id)
         self.assertEqual(pport_id, test_pport_id)
 
         # check cable in both payload and metatype attribute
         check_cables = [
-            result_data['subupdated'][0]['cable'],
-            updated_data['connected_to'][0],
+            result_data['subupdated']['cable'],
+            updated_data['connected_to'],
         ]
 
         for check_cable in check_cables:
@@ -344,8 +519,8 @@ class PortCompositeTest(Neo4jGraphQLNetworkTest):
 
         # check parent port in payload and in metatype attribute
         check_parents = [
-            result_data['parent_port_updated'][0]['port'],
-            updated_data['parent'][0],
+            result_data['parent_port_updated']['port'],
+            updated_data['parent'],
         ]
 
         for check_parent in check_parents:
@@ -5529,7 +5704,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                 operational_state: "{switch_opstate}"
               }}
             ]
-            {has_input}:[ # TODO add has_room instead
+            {has_input}:[
               {{
                 {has_input_id}
                 name: "{has_room_name}"
@@ -5545,11 +5720,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -5581,11 +5755,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                   ...on Site{{
                     id
                     name
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -5626,11 +5799,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                   id
                   name
                   ...on Site{{
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -5670,11 +5842,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -5812,7 +5983,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
         site_id = check_site['id']
 
         self.assertEquals(check_site['name'], site_name)
-        self.assertEquals(check_site['country_code']['name'], site_country)
+        self.assertEquals(check_site['country']['value'], site_country)
         if site_type:
             self.assertEquals(check_site['site_type']['value'], site_type)
         self.assertEquals(check_site['area'], site_area)
@@ -5857,7 +6028,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
@@ -6069,7 +6240,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
         site_id = check_site['id']
 
         self.assertEquals(check_site['name'], site_name)
-        self.assertEquals(check_site['country_code']['name'], site_country)
+        self.assertEquals(check_site['country']['value'], site_country)
         if site_type:
             self.assertEquals(check_site['site_type']['value'], site_type)
         self.assertEquals(check_site['area'], site_area)
@@ -6113,7 +6284,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
@@ -6272,11 +6443,10 @@ class RoomTest(Neo4jGraphQLNetworkTest):
                   ...on Site{{
                     id
                     name
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -6333,11 +6503,10 @@ class RoomTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -6459,7 +6628,7 @@ class RoomTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
@@ -6615,7 +6784,7 @@ class RoomTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)

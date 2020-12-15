@@ -95,7 +95,8 @@ class Port(NIObjectType, PhysicalMixin):
     name = NIStringField(type_kwargs={ 'required': True })
     port_type = NIChoiceField(dropdown_name="port_types")
     description = NIStringField()
-    connected_to = NIListField(type_args=(lambda: Physical,), rel_name='Connected_to', rel_method='_incoming')
+    connected_to = NISingleRelationField(field_type=(lambda: Physical), \
+        rel_name='Connected_to', rel_method='_incoming')
 
     class NIMetaType:
         ni_type = 'Port'
@@ -180,7 +181,7 @@ class Host(NIObjectType, PhysicalLogicalMixin):
 
     class NIMetaType:
         ni_type = 'Host'
-        ni_metatype = NIMETA_LOGICAL
+        ni_metatype = NIMETA_PHYSICAL
         context_method = sriutils.get_network_context
 
 
@@ -419,8 +420,7 @@ class Site(NIObjectType, LocationMixin):
     name = NIStringField(type_kwargs={ 'required': True })
     site_type = NIChoiceField(dropdown_name="site_types", \
         type_kwargs={ 'required': False })
-    country = NIStringField()
-    country_code = NIChoiceField(dropdown_name="countries", \
+    country = NIChoiceField(dropdown_name="countries", \
         type_kwargs={ 'required': False })
     area = NIStringField()
     longitude = NIFloatField()
