@@ -255,6 +255,14 @@ class EditSiteForm(forms.Form):
         return cleaned_data
 
 
+class EditSRISiteForm(EditSiteForm):
+    def __init__(self, *args, **kwargs):
+        super(EditSiteForm, self).__init__(*args, **kwargs)
+        self.fields['country'].choices = country_codes()
+        self.fields['site_type'].choices = Dropdown.get('site_types').as_choices()
+        self.fields['relationship_responsible_for'].choices = get_node_type_tuples('Site_Owner')
+
+
 class NewSiteOwnerForm(forms.Form):
     name = forms.CharField()
     description = description_field('site owner')

@@ -5704,7 +5704,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                 operational_state: "{switch_opstate}"
               }}
             ]
-            {has_input}:[ # TODO add has_room instead
+            {has_input}:[
               {{
                 {has_input_id}
                 name: "{has_room_name}"
@@ -5720,11 +5720,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -5756,11 +5755,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                   ...on Site{{
                     id
                     name
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -5801,11 +5799,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
                   id
                   name
                   ...on Site{{
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -5845,11 +5842,10 @@ class SiteTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -5987,7 +5983,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
         site_id = check_site['id']
 
         self.assertEquals(check_site['name'], site_name)
-        self.assertEquals(check_site['country_code']['name'], site_country)
+        self.assertEquals(check_site['country']['value'], site_country)
         if site_type:
             self.assertEquals(check_site['site_type']['value'], site_type)
         self.assertEquals(check_site['area'], site_area)
@@ -6032,7 +6028,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
@@ -6244,7 +6240,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
         site_id = check_site['id']
 
         self.assertEquals(check_site['name'], site_name)
-        self.assertEquals(check_site['country_code']['name'], site_country)
+        self.assertEquals(check_site['country']['value'], site_country)
         if site_type:
             self.assertEquals(check_site['site_type']['value'], site_type)
         self.assertEquals(check_site['area'], site_area)
@@ -6288,7 +6284,7 @@ class SiteTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
