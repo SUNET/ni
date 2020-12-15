@@ -245,7 +245,7 @@ class Physical(PhysicalLogical):
     location = graphene.Field(lambda:Location)
     has = graphene.List(lambda:Physical)
     part_of = graphene.Field(lambda:Logical)
-    parent = graphene.List(lambda:PhysicalLogical)
+    parent = graphene.Field(lambda:PhysicalLogical)
     owner = graphene.Field(lambda:Relation)
 
 
@@ -447,7 +447,7 @@ class PhysicalMixin(PhysicalLogicalMixin):
             info, self.get_node(), 'get_part_of', 'Part_of')
 
     def resolve_parent(self, info, **kwargs):
-        return ResolverUtils.multiple_relation_resolver(
+        return ResolverUtils.single_relation_resolver(
             info, self.get_node(), 'get_parent', 'Has')
 
     def resolve_owner(self, info, **kwargs):
