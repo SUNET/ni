@@ -820,8 +820,9 @@ class PortCableTest(Neo4jGraphQLNetworkTest):
 class SwitchTest(Neo4jGraphQLNetworkTest):
     def test_switch(self):
         # create test switchtype and test query
+        switch_modelname = "Testlink"
         test_switchtype = SwitchType(
-            name="Testlink",
+            name=switch_modelname,
             ports="80,8000"
         )
         test_switchtype.save()
@@ -864,6 +865,11 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         location = generator.create_rack()
         location_id = relay.Node.to_global_id(str(location.node_type),
                                                 str(location.handle_id))
+
+        # get an owner
+        owner = generator.create_end_user()
+        owner_id = relay.Node.to_global_id(str(owner.node_type).replace(' ', ''),
+                                            str(owner.handle_id))
 
         # get two groups
         community_generator = CommunityFakeDataGenerator()
@@ -938,6 +944,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 max_number_of_ports: {max_number_of_ports}
                 services_locked: {services_locked}
                 relationship_location: "{location_id}"
+                relationship_owner: "{owner_id}"
               }}
               create_subinputs:[
                 {{
@@ -975,6 +982,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                   id
                   name
                 }}
+                owner{{
+                  id
+                  name
+                }}
                 responsible_group{{
                   id
                   name
@@ -991,6 +1002,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 os_version
                 contract_number
                 max_number_of_ports
+                model
                 ports{{
                   id
                   name
@@ -1047,7 +1059,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                     port_2_description=port_2_description, port_2_id=port_2_id,
                     rack_back=str(rack_back).lower(),
                     services_locked=str(services_locked).lower(),
-                    location_id=location_id)
+                    location_id=location_id, owner_id=owner_id)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
@@ -1074,6 +1086,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(created_switch['contract_number'], contract_number)
         self.assertEqual(created_switch['max_number_of_ports'], max_number_of_ports)
         self.assertEqual(created_switch['services_locked'], services_locked)
+        self.assertEqual(created_switch['model'], switch_modelname)
 
         # check provider
         check_provider = created_switch['provider']
@@ -1090,6 +1103,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         # check support group
         check_support = created_switch['support_group']
         self.assertEqual(check_support['id'], group2_id)
+
+        # check owner
+        check_owner = created_switch['owner']
+        self.assertEqualIds(check_owner['id'], owner_id)
 
         # check ports data
 
@@ -1125,6 +1142,11 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         provider = generator.create_provider()
         provider_id = relay.Node.to_global_id(str(provider.node_type),
                                             str(provider.handle_id))
+
+        # get another owner
+        owner = generator.create_end_user()
+        owner_id = relay.Node.to_global_id(str(owner.node_type).replace(' ', ''),
+                                            str(owner.handle_id))
 
         switch_name = "New Switch"
         switch_description = "Updated from graphql"
@@ -1170,6 +1192,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 contract_number: "{contract_number}"
                 max_number_of_ports: {max_number_of_ports}
                 services_locked: {services_locked}
+                relationship_owner: "{owner_id}"
               }}
             }}
           ){{
@@ -1188,7 +1211,12 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                 rack_back
                 services_locked
                 services_checked
+                model
                 provider{{
+                  id
+                  name
+                }}
+                owner{{
                   id
                   name
                 }}
@@ -1226,7 +1254,8 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
                     os_version=os_version, contract_number=contract_number,
                     max_number_of_ports=max_number_of_ports,
                     rack_back=str(rack_back).lower(),
-                    services_locked=str(services_locked).lower())
+                    services_locked=str(services_locked).lower(),
+                    owner_id=owner_id)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
@@ -1251,6 +1280,7 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         self.assertEqual(updated_switch['contract_number'], contract_number)
         self.assertEqual(updated_switch['max_number_of_ports'], max_number_of_ports)
         self.assertEqual(updated_switch['services_locked'], services_locked)
+        self.assertEqual(updated_switch['model'], switch_modelname)
 
         # check provider
         check_provider = updated_switch['provider']
@@ -1267,6 +1297,10 @@ class SwitchTest(Neo4jGraphQLNetworkTest):
         # check location
         check_location = updated_switch['location']
         self.assertEqual(check_location, None)
+
+        # check owner
+        check_owner = updated_switch['owner']
+        self.assertEqualIds(check_owner['id'], owner_id)
 
         # set empty group relations
         query = '''
@@ -7036,7 +7070,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         mutation{{
           composite_service(input:{{
             create_input:{{
-              name: "{srv_name}"
               service_type: "{srv_service_type}"
               operational_state: "{srv_operational_state}"
               description: "{srv_description}"
@@ -7189,7 +7222,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         ## creation
         # data service
         a_service = data_generator.create_service()
-        srv_name = a_service.get_node().data.get("name")
         srv_service_type = service_type_create
         srv_operational_state = opstate_create
         srv_description = a_service.get_node().data.get("description")
@@ -7269,7 +7301,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
           composite_service(input:{{
             {main_input}:{{
               {main_input_id}
-              name: "{srv_name}"
               service_type: "{srv_service_type}"
               operational_state: "{srv_operational_state}"
               description: "{srv_description}"
@@ -7401,7 +7432,7 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
 
         query = query_t.format(main_input=main_input,
             main_input_id=main_input_id, main_payload=main_payload,
-            srv_name=srv_name, srv_operational_state=srv_operational_state,
+            srv_operational_state=srv_operational_state,
             srv_description=srv_description, srv_service_type=srv_service_type,
             project_end_date=project_end_date,
             decommissioned_date=decommissioned_date,
@@ -7453,7 +7484,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         check_service = all_data[main_payload]['service']
         service_id = check_service['id']
 
-        self.assertEquals(check_service['name'], srv_name)
         self.assertEquals(check_service['operational_state']['value'],
                             srv_operational_state)
         self.assertEquals(check_service['description'], srv_description)
@@ -7507,7 +7537,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         ## update
         # data service
         a_service = data_generator.create_service()
-        srv_name = a_service.get_node().data.get("name")
         srv_service_type = service_type_update
         srv_operational_state = opstate_update
         srv_description = a_service.get_node().data.get("description")
@@ -7569,7 +7598,7 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
 
         query = query_t.format(main_input=main_input,
             main_input_id=main_input_id, main_payload=main_payload,
-            srv_name=srv_name, srv_operational_state=srv_operational_state,
+            srv_operational_state=srv_operational_state,
             srv_description=srv_description, srv_service_type=srv_service_type,
             project_end_date=project_end_date,
             decommissioned_date=decommissioned_date,
@@ -7621,7 +7650,6 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         check_service = all_data[main_payload]['service']
         service_id = check_service['id']
 
-        self.assertEquals(check_service['name'], srv_name)
         self.assertEquals(check_service['operational_state']['value'],
                             srv_operational_state)
         self.assertEquals(check_service['description'], srv_description)

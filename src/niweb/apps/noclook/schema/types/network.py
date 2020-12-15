@@ -246,6 +246,9 @@ class Switch(NIObjectType, PhysicalMixin):
                             rel_method='_outgoing')
     services_locked = NIBooleanField()
     services_checked = NIBooleanField()
+    model = NIStringField()
+    owner = NISingleRelationField(field_type=(lambda: Relation),
+        rel_name="Owns", rel_method="_incoming")
 
     class NIMetaType:
         ni_type = 'Switch'
@@ -317,6 +320,8 @@ class OpticalNode(NIObjectType, PhysicalMixin):
     rack_back = NIBooleanField()
     operational_state = NIChoiceField(dropdown_name="operational_states", \
         type_kwargs={ 'required': True })
+    link = NIStringField()
+    ots = NIStringField()
 
     class NIMetaType:
         ni_type = 'Optical Node'
