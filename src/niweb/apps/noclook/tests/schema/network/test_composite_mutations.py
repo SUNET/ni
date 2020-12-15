@@ -6443,11 +6443,10 @@ class RoomTest(Neo4jGraphQLNetworkTest):
                   ...on Site{{
                     id
                     name
-                    country_code{{
+                    country{{
                       name
                       value
                     }}
-                    country
                     site_type{{
                       name
                       value
@@ -6504,11 +6503,10 @@ class RoomTest(Neo4jGraphQLNetworkTest):
               site{{
                 id
                 name
-                country_code{{
+                country{{
                   name
                   value
                 }}
-                country
                 site_type{{
                   name
                   value
@@ -6630,7 +6628,7 @@ class RoomTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
@@ -6786,7 +6784,7 @@ class RoomTest(Neo4jGraphQLNetworkTest):
 
         self.assertEquals(check_parent_site['id'], parent_site_id)
         self.assertEquals(check_parent_site['name'], parent_site_name)
-        self.assertEquals(check_parent_site['country_code']['name'], parent_site_country)
+        self.assertEquals(check_parent_site['country']['value'], parent_site_country)
         if parent_site_type:
             self.assertEquals(check_parent_site['site_type']['value'], parent_site_type)
         self.assertEquals(check_parent_site['area'], parent_site_area)
