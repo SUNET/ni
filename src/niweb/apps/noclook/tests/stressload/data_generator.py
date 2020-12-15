@@ -998,8 +998,7 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
         site_types = self.get_dropdown_keys('site_types')
 
         data = {
-            'country_code': random.choice(country_codes),
-            'country': random.choice(countries),
+            'country': random.choice(country_codes),
             'longitude': self.fake.longitude(),
             'latitude': self.fake.latitude(),
             'area': self.random_county(),
