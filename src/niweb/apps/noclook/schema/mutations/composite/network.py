@@ -67,6 +67,7 @@ class CompositePortMutation(CompositeMutation):
         secondary_mutation_f = NICableMutationFactory
         context = sriutils.get_network_context()
         include_metafields = ('parent', 'dependents')
+        single_submutation = True
 
 
 class CompositeCableMutation(CompositeMutation):

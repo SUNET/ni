@@ -95,7 +95,8 @@ class Port(NIObjectType, PhysicalMixin):
     name = NIStringField(type_kwargs={ 'required': True })
     port_type = NIChoiceField(dropdown_name="port_types")
     description = NIStringField()
-    connected_to = NIListField(type_args=(lambda: Physical,), rel_name='Connected_to', rel_method='_incoming')
+    connected_to = NISingleRelationField(field_type=(lambda: Physical), \
+        rel_name='Connected_to', rel_method='_incoming')
 
     class NIMetaType:
         ni_type = 'Port'

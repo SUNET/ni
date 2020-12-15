@@ -2083,6 +2083,7 @@ class CompositeMutation(relay.ClientIDMutation):
         include_metafields = getattr(ni_metaclass, 'include_metafields', None)
         exclude_metafields = getattr(ni_metaclass, 'exclude_metafields', None)
         has_creation = getattr(ni_metaclass, 'has_creation', True)
+        single_submutation = getattr(ni_metaclass, 'single_submutation', False)
 
         # get mandatory input
         cls_input = getattr(cls, 'Input')
@@ -2130,6 +2131,16 @@ class CompositeMutation(relay.ClientIDMutation):
             cls_input.create_subinputs = graphene.List(secondary_mutation_f.get_create_mutation().Input)
             cls_input.update_subinputs = graphene.List(secondary_mutation_f.get_update_mutation().Input)
             cls_input.delete_subinputs = graphene.List(secondary_mutation_f.get_delete_mutation().Input)
+
+            if single_submutation:
+                cls.subcreated = graphene.Field(secondary_mutation_f.get_create_mutation())
+                cls.subupdated = graphene.Field(secondary_mutation_f.get_update_mutation())
+                cls.subdeleted = graphene.Field(secondary_mutation_f.get_delete_mutation())
+
+                # add regular inputs
+                cls_input.create_subinputs = graphene.Field(secondary_mutation_f.get_create_mutation().Input)
+                cls_input.update_subinputs = graphene.Field(secondary_mutation_f.get_update_mutation().Input)
+                cls_input.delete_subinputs = graphene.Field(secondary_mutation_f.get_delete_mutation().Input)
 
         # add unlink_submutation to metaclass, payload and input
         # as these are present on every composite mutation
@@ -2481,6 +2492,7 @@ class CompositeMutation(relay.ClientIDMutation):
         update_mutation = getattr(nimetaclass, 'update_mutation', None)
         context = getattr(nimetaclass, 'context', None)
         has_creation = getattr(nimetaclass, 'has_creation', True)
+        single_submutation = getattr(nimetaclass, 'single_submutation', None)
 
         # this handle_id will be set to the created or updated main entity
         main_handle_id = None
@@ -2549,10 +2561,18 @@ class CompositeMutation(relay.ClientIDMutation):
                         has_subcreated = True
                         ret_subcreated = []
 
+                        if single_submutation:
+                            ret_subcreated = None
+                            create_subinputs = [create_subinputs]
+
                         for subinput in create_subinputs:
                             subinput['context'] = context
                             ret = create_submutation.mutate_and_get_payload(root, info, **subinput)
-                            ret_subcreated.append(ret)
+
+                            if single_submutation:
+                                ret_subcreated = ret
+                            else:
+                                ret_subcreated.append(ret)
 
                             # link if it's possible
                             sub_errors = getattr(ret, 'errors', None)
@@ -2566,10 +2586,18 @@ class CompositeMutation(relay.ClientIDMutation):
                         has_subupdated = True
                         ret_subupdated = []
 
+                        if single_submutation:
+                            ret_subupdated = None
+                            update_subinputs = [update_subinputs]
+
                         for subinput in update_subinputs:
                             subinput['context'] = context
                             ret = update_submutation.mutate_and_get_payload(root, info, **subinput)
-                            ret_subupdated.append(ret)
+
+                            if single_submutation:
+                                ret_subupdated = ret
+                            else:
+                                ret_subupdated.append(ret)
 
                             # link if it's possible
                             sub_errors = getattr(ret, 'errors', None)
@@ -2583,9 +2611,17 @@ class CompositeMutation(relay.ClientIDMutation):
                         has_subdeleted = True
                         ret_subdeleted = []
 
+                        if single_submutation:
+                            ret_subdeleted = None
+                            delete_subinputs = [delete_subinputs]
+
                         for subinput in delete_subinputs:
                             ret = delete_submutation.mutate_and_get_payload(root, info, **subinput)
-                            ret_subdeleted.append(ret)
+
+                            if single_submutation:
+                                ret_subdeleted = ret
+                            else:
+                                ret_subdeleted.append(ret)
 
             if unlink_subinputs:
                 ret_unlinked = []
