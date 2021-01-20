@@ -45,6 +45,7 @@ class NINode(graphene.Node):
     description = graphene.String()
     relation_id = graphene.Int()
     contexts = graphene.List(graphene.String)
+    match_txt = graphene.String()
 
     def resolve_description(self, info, **kwargs):
         ret = None
@@ -52,6 +53,17 @@ class NINode(graphene.Node):
         if sriutils.authorice_read_resource(info.context.user, self.handle_id):
             try:
                 ret = self.get_node().data.get("description")
+            except:
+                pass
+
+        return ret
+
+    def resolve_match_txt(self, info, **kwargs):
+        ret = None
+
+        if sriutils.authorice_read_resource(info.context.user, self.handle_id):
+            try:
+                ret = getattr(self, 'match_txt', None)
             except:
                 pass
 
