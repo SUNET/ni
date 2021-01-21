@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.conf import settings
 from django.middleware.csrf import get_token
 from django.urls import reverse_lazy
+from dynamic_preferences.registries import global_preferences_registry
 from graphql_jwt.settings import jwt_settings
 from re import escape as re_escape
 import json
@@ -499,3 +500,9 @@ def json_table_to_file(request):
         elif table and file_format == 'xls':
             return helpers.dicts_to_xls_response(table, header)
     raise Http404
+
+
+def forms_version(request):
+    global_preferences = global_preferences_registry.manager()
+    domain = global_preferences.get('general__data_domain', '')
+    return HttpResponse(domain)
