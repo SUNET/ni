@@ -95,27 +95,30 @@ class GlobalSearchTest(Neo4jGraphQLNetworkTest):
 
 
 class SearchPortTest(Neo4jGraphQLNetworkTest):
-    def test_search_port(self):
+    def setUp(self):
+        super().setUp()
+
         data_generator = NetworkFakeDataGenerator()
         relation_maker = PhysicalDataRelationMaker()
 
         # get one of the ports
-        common = 'test-0'
-        rack = data_generator.create_rack()
-        switch_with_ports = data_generator.create_switch()
+        self.common = 'test-0'
+        self.rack = data_generator.create_rack()
+        self.switch_with_ports = data_generator.create_switch()
 
-        port1 = data_generator.create_port(name="{}1".format(common))
-        port2 = data_generator.create_port(name="{}2".format(common))
+        self.port1 = data_generator.create_port(name="{}1".format(self.common))
+        self.port2 = data_generator.create_port(name="{}2".format(self.common))
 
-        relation_maker.add_has(data_generator.user, switch_with_ports, port1)
-        relation_maker.add_has(data_generator.user, switch_with_ports, port2)
-        relation_maker.add_location(data_generator.user, switch_with_ports, rack)
+        relation_maker.add_has(data_generator.user, self.switch_with_ports, self.port1)
+        relation_maker.add_has(data_generator.user, self.switch_with_ports, self.port2)
+        relation_maker.add_location(data_generator.user, self.switch_with_ports, self.rack)
 
+    def check_port_search(self, query_name):
         # search common pattern
-        search = common
+        search = self.common
         query = '''
         {{
-          search_port(filter:{{ query: "{search}" }}){{
+          {query_name}(filter:{{ query: "{search}" }}){{
             edges{{
               node{{
                 id
@@ -125,20 +128,20 @@ class SearchPortTest(Neo4jGraphQLNetworkTest):
             }}
           }}
         }}
-        '''.format(search=search)
+        '''.format(query_name=query_name, search=search)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
 
         # check length
-        results = result.data['search_port']['edges']
+        results = result.data[query_name]['edges']
         self.assertEqual(len(results), 2)
 
         # search one port
-        search = port1.node_name
+        search = self.port1.node_name
         query = '''
         {{
-          search_port(filter:{{ query: "{search}" }}){{
+          {query_name}(filter:{{ query: "{search}" }}){{
             edges{{
               node{{
                 id
@@ -148,11 +151,54 @@ class SearchPortTest(Neo4jGraphQLNetworkTest):
             }}
           }}
         }}
-        '''.format(search=search)
+        '''.format(query_name=query_name, search=search)
 
         result = schema.execute(query, context=self.context)
         assert not result.errors, pformat(result.errors, indent=1)
 
         # check length
-        results = result.data['search_port']['edges']
+        results = result.data[query_name]['edges']
         self.assertEqual(len(results), 1)
+
+    def test_search_port(self):
+        # check searching port by name only
+        self.check_port_search('search_port')
+
+    def search_port(self, query_name, search):
+        query = '''
+        {{
+          {query_name}(filter:{{ query: "{search}" }}){{
+            edges{{
+              node{{
+                id
+                name
+                description
+              }}
+            }}
+          }}
+        }}
+        '''.format(query_name=query_name, search=search)
+
+        result = schema.execute(query, context=self.context)
+        assert not result.errors, pformat(result.errors, indent=1)
+
+        return result.data[query_name]['edges']
+
+    def test_cable_search_port(self):
+        # check searching port by name
+        query_name='search_cable_port'
+        self.check_port_search(query_name)
+
+        # search them by equipment name
+        search = self.switch_with_ports.node_name
+
+        # check length
+        results = self.search_port(query_name, search)
+        self.assertEqual(len(results), 2)
+
+        # search them by location name
+        search = self.rack.node_name
+
+        # check length
+        results = self.search_port(query_name, search)
+        self.assertEqual(len(results), 2)
