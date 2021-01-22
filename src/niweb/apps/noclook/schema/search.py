@@ -133,10 +133,15 @@ class SearchQueryConnection(graphene.relay.Connection):
                     # get handle_id from json
                     handle_id = element[json_id_attr]
                     nh = NodeHandle.objects.get(handle_id=handle_id)
+
+                    # add match_txt NINode attribute
+                    nh.match_txt = element.get('name', None)
+
                     list_elem = cls.wrap_node(nh, element)
                     ret.append(list_elem)
                 except:
-                    pass
+                    import traceback
+                    print(traceback.format_exc())
         return ret
 
 
@@ -221,6 +226,32 @@ class PortSearchConnection(SearchQueryConnection):
     class NIMetaType:
         context = sriutils.get_network_context()
         search_view = search_simple_port_typeahead
+        ni_type = Port
+        json_id_attr = 'handle_id'
+
+    class Meta:
+        node = Port
+
+
+class CablePortSearchConnection(SearchQueryConnection):
+    @classmethod
+    def get_query_field_resolver(cls):
+        ni_type = cls.get_from_nimetatype('ni_type')
+        type_slug = slugify(ni_type)
+
+        field_name = 'search_cable_{}'.format(type_slug)
+        resolver_name = 'resolve_search_cable_{}'.format(type_slug)
+
+        ret = {
+            'field': (field_name, cls.get_connection_field()),
+            'resolver': (resolver_name, cls.get_connection_resolver()),
+        }
+
+        return ret
+
+    class NIMetaType:
+        context = sriutils.get_network_context()
+        search_view = search_port_typeahead
         ni_type = Port
         json_id_attr = 'handle_id'
 

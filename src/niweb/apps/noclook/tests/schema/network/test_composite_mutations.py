@@ -2,7 +2,7 @@
 __author__ = 'ffuentes'
 
 from apps.noclook.models import NodeHandle, Dropdown, Choice, Group, \
-    GroupContextAuthzAction, NodeHandleContext, SwitchType
+    GroupContextAuthzAction, NodeHandleContext, SwitchType, UniqueIdGenerator
 from apps.noclook.tests.stressload.data_generator \
     import NetworkFakeDataGenerator, CommunityFakeDataGenerator
 from apps.noclook.schema.utils import sunet_forms_enabled
@@ -7465,6 +7465,10 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         decommissioned_date = "" if srv_operational_state != "Decommissioned" \
                 else 'decommissioned_date: "{}"'.format(srv_decommissioned_date)
 
+        # get unique id generation data before creating a new service
+        uidg = UniqueIdGenerator.objects.get(name='service_id_generator')
+        pre_last_id = uidg.last_id
+
         query_t = """
         mutation{{
           composite_service(input:{{
@@ -7653,12 +7657,18 @@ class ServiceTest(Neo4jGraphQLNetworkTest):
         check_service = all_data[main_payload]['service']
         service_id = check_service['id']
 
-        self.assertEquals(check_service['operational_state']['value'],
+        # check that the service id_generator has been changed
+        uidg = UniqueIdGenerator.objects.get(name='service_id_generator')
+        post_last_id = uidg.last_id
+        self.assertNotEqual(pre_last_id, post_last_id)
+        self.assertEqual(check_service['name'], post_last_id)
+
+        self.assertEqual(check_service['operational_state']['value'],
                             srv_operational_state)
-        self.assertEquals(check_service['description'], srv_description)
-        self.assertEquals(check_service['service_type']['name'], srv_service_type)
-        self.assertEquals(check_service['project_end_date'], srv_project_end_date)
-        self.assertEquals(check_service['decommissioned_date'], \
+        self.assertEqual(check_service['description'], srv_description)
+        self.assertEqual(check_service['service_type']['name'], srv_service_type)
+        self.assertEqual(check_service['project_end_date'], srv_project_end_date)
+        self.assertEqual(check_service['decommissioned_date'], \
             srv_decommissioned_date)
 
         # check customer

@@ -801,13 +801,7 @@ class NewServiceForm(forms.Form):
         manually_named_services = ['External']  # service_type of manually named services
         manually_named_services_class = ['External']
 
-    def clean(self):
-        """
-        Sets name to next service ID for internal services. Only expect a user
-        inputted name for manually named services.
-        Sets the service class from the service type.
-        """
-        cleaned_data = super(NewServiceForm, self).clean()
+    def create_clean(self, cleaned_data):
         # Set service_class depending on service_type.
         service_type_ = ServiceType.objects.get(name=cleaned_data.get('service_type'))
         cleaned_data['service_class'] = service_type_.service_class.name
@@ -828,6 +822,17 @@ class NewServiceForm(forms.Form):
                     raise UniqueIdGenerator.DoesNotExist(msg)
             elif not name:
                 self.add_error('name', 'Missing name for {} service.'.format(service_type))
+
+        return cleaned_data
+
+    def clean(self):
+        """
+        Sets name to next service ID for internal services. Only expect a user
+        inputted name for manually named services.
+        Sets the service class from the service type.
+        """
+        cleaned_data = super(NewServiceForm, self).clean()
+        cleaned_data = self.create_clean(cleaned_data)
         return cleaned_data
 
 
@@ -863,8 +868,7 @@ class EditServiceForm(forms.Form):
     relationship_user = relationship_field('user')
     relationship_depends_on = relationship_field('depends on')
 
-    def clean(self):
-        cleaned_data = super(EditServiceForm, self).clean()
+    def edit_clean(self, cleaned_data):
         # Set service_class depending on service_type.
         #TODO: Handle when service type does not exist?
         service_type_ = ServiceType.objects.get(name=cleaned_data.get('service_type'))
@@ -892,6 +896,54 @@ class EditServiceForm(forms.Form):
         # Convert decommissioned_date to string if set
         if cleaned_data.get('decommissioned_date', None):
             cleaned_data['decommissioned_date'] = cleaned_data['decommissioned_date'].strftime('%Y-%m-%d')
+
+        return cleaned_data
+
+    def clean(self):
+        cleaned_data = super(EditServiceForm, self).clean()
+        cleaned_data = self.edit_clean(cleaned_data)
+
+        return cleaned_data
+
+
+class SRIServiceForm(NewServiceForm):
+    def __init__(self, *args, **kwargs):
+        super(SRIServiceForm, self).__init__(*args, **kwargs)
+        self.fields['support_group'].choices = get_node_type_tuples('Group')
+        self.fields['responsible_group'].choices = get_node_type_tuples('Group')
+        self.fields['operational_state'].choices = Dropdown.get('operational_states').as_choices()
+        service_types = ServiceType.objects.all().prefetch_related('service_class').order_by('service_class__name','name')
+        self.fields['service_type'].choices = [t.as_choice() for t in service_types]
+        self.fields['relationship_provider'].choices = get_node_type_tuples('Provider')
+
+    name = forms.CharField(required=False)
+    service_class = forms.CharField(required=False, widget=forms.widgets.HiddenInput)
+    service_type = forms.ChoiceField(widget=forms.widgets.Select)
+    project_end_date = DatePickerField(required=False)
+    decommissioned_date = DatePickerField(required=False, today=True)
+    operational_state = forms.ChoiceField(widget=forms.widgets.Select)
+    description = description_field('service')
+    responsible_group = forms.ChoiceField(required=False, widget=forms.widgets.Select,
+                                          help_text='Name of the group responsible for the service.')
+    support_group = forms.ChoiceField(required=False, widget=forms.widgets.Select,
+                                      help_text='Name of the support group.')
+    ncs_service_name = forms.CharField(required=False, help_text='')
+    vpn_type = forms.CharField(required=False, help_text='')
+    vlan = forms.CharField(required=False, help_text='')
+    vrf_target = forms.CharField(required=False, help_text='')
+    route_distinguisher = forms.CharField(required=False, help_text='')
+    contract_number = forms.CharField(required=False, help_text='Which contract regulates the billing of this service?')
+    relationship_provider = relationship_field('provider', True)
+    relationship_user = relationship_field('user')
+    relationship_depends_on = relationship_field('depends on')
+
+    def clean(self):
+        cleaned_data = super(SRIServiceForm, self).clean()
+
+        # use the form to clean the fields present on the edition form
+        edit_form = EditServiceForm()
+        cleaned_data = edit_form.edit_clean(cleaned_data)
+
         return cleaned_data
 
 

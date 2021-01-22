@@ -644,7 +644,7 @@ class NIRackMutationFactory(NIMutationFactory):
 ## Service
 class NIServiceMutationFactory(NIMutationFactory):
     class NIMetaClass:
-        form = EditServiceForm
+        form = SRIServiceForm
         graphql_type = Service
         unique_node = True
         relations_processors = {

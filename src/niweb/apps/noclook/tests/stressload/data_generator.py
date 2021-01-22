@@ -1285,6 +1285,10 @@ class PhysicalDataRelationMaker(DataRelationMaker):
         helpers.set_has(user, physical_nh.get_node(),
                                     physical_has_nh.handle_id)
 
+    def add_location(self, user, physical_nh, location_nh):
+        helpers.set_location(user, physical_nh.get_node(),
+            location_nh.handle_id)
+
 
 class LocationDataRelationMaker(DataRelationMaker):
     def add_parent(self, user, location_nh, parent_nh):
