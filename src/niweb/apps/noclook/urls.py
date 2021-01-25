@@ -8,6 +8,8 @@ urlpatterns = [
     url(r'^csrf/$', other.csrf),
     url(r'^login/$', auth_views.LoginView.as_view(), name="login"),
     url(r'^$', other.index, name="home"),
+    # shows which forms we're loading
+    url(r'^forms/$', other.forms_version),
     # Log out
     url(r'^logout/$', other.logout_page, name="logout"),
     # Visualize views
