@@ -10,7 +10,7 @@ $(document).ready(
             datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
             queryTokenizer: Bloodhound.tokenizers.whitespace,
             remote: {
-                url: '/search/typeahead/ports?query=%Q',
+                url: '{{ script_name }}/search/typeahead/ports?query=%Q',
                 wildcard: '%Q'
             }
           });
