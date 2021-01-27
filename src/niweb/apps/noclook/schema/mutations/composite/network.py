@@ -337,7 +337,7 @@ class CompositeOpticalPathMutation(CompositeMutation):
         graphql_type = OpticalPath
         main_mutation_f = NIOpticalPathMutationFactory
         context = sriutils.get_network_context()
-        include_metafields = ('dependencies')
+        include_metafields = ('dependencies', 'dependents')
 
 
 ## Peering
