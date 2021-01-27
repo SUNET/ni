@@ -126,6 +126,7 @@ if sunet_forms_enabled():
         name = NIStringField(type_kwargs={ 'required': True })
         cable_type = NIChoiceField(dropdown_name="cable_types")
         description = NIStringField()
+        cable_length = NIFloatField()
         provider = NISingleRelationField(field_type=(lambda: Provider), \
             rel_name="Provides", rel_method="_incoming")
         ports = NIListField(type_args=(lambda: Port,), \
