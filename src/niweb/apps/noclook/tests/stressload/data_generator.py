@@ -2,6 +2,12 @@
 
 __author__ = 'ffuentes'
 
+import apps.noclook.vakt.utils as sriutils
+import logging
+import random
+import string
+import os
+
 from collections import OrderedDict
 from faker import Faker
 from apps.nerds.lib.consumer_util import get_user
@@ -18,10 +24,7 @@ from dynamic_preferences.registries import global_preferences_registry
 import norduniclient as nc
 from norduniclient import META_TYPES
 
-import apps.noclook.vakt.utils as sriutils
-import random
-import string
-import os
+logger = logging.getLogger()
 
 class FakeDataGenerator:
     counties = [
@@ -584,11 +587,15 @@ class NetworkFakeDataGenerator(FakeDataGenerator):
         }
 
         if sunet_forms_enabled():
-            cable_contract = random.choice(
-                Dropdown.objects.get(name="tele2_cable_contracts").as_choices()[1:][1]
-            )
-            data['tele2_cable_contract'] = cable_contract
-            data['tele2_alternative_circuit_id'] = self.escape_quotes(self.fake.ean8()),
+            try:
+                cable_contract = random.choice(
+                    DropModel.objects.get(name="tele2_cable_contracts").as_choices()[1:][1]
+                )
+                data['tele2_cable_contract'] = cable_contract
+            except DropModel.DoesNotExist:
+                logger.warn('Tele2 cable contracts dropdown is not available')
+            circuit_id = self.escape_quotes(self.fake.ean8())
+            data['tele2_alternative_circuit_id'] = circuit_id
 
 
         for key, value in data.items():
