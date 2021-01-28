@@ -220,6 +220,10 @@ router_dependents_types = [
     Service, OpticalPath, OpticalMultiplexSection, OpticalLink
 ]
 
+optlink_dependendencies_types = [
+    Service, OpticalPath, OpticalMultiplexSection, OpticalLink, Cable
+]
+
 
 class NOCRootQuery(NOCAutoQuery):
     ninodes = relay.ConnectionField(NINode.get_connection_class(),
@@ -274,6 +278,10 @@ class NOCRootQuery(NOCAutoQuery):
     # optical_path_dependency_types
     getOpticalPathDependencyTypes = graphene.List(TypeInfo,
             resolver=get_typelist_resolver(optical_path_dependency_types))
+
+    # optical_link_dependencies_types
+    getOpticalLinkDependendenciesTypes = graphene.List(TypeInfo,
+            resolver=get_typelist_resolver(optlink_dependendencies_types))
 
     # router_dependents_types
     getRouterDependentsTypes = graphene.List(TypeInfo,
