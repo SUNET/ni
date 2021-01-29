@@ -3,7 +3,8 @@ __author__ = 'ffuentes'
 
 from apps.noclook.schema.query import NOCRootQuery, \
                                         network_org_types, host_owner_types, \
-                                        optical_path_dependency_types
+                                        optical_path_dependency_types, \
+                                        optlink_dependendencies_types
 from apps.noclook.models import ServiceClass
 from django.core.management import call_command
 from graphene import relay
@@ -153,6 +154,46 @@ class OpticalPathDependencyTypesTest(Neo4jGraphQLNetworkTest):
 
         self.assertEqual(result.data, expected)
 
+
+class OpticalLinkDependenciesTypesTest(Neo4jGraphQLNetworkTest):
+    def test_optical_link_types(self):
+        query = '''
+        {
+          getOpticalLinkDependendenciesTypes{
+            type_name
+            connection_name
+            byid_name
+            all_name
+          }
+        }
+        '''
+
+        expected = {
+            "getOpticalLinkDependendenciesTypes": []
+        }
+
+        for clazz in optlink_dependendencies_types:
+            byid_name = NOCRootQuery.\
+                graph_by_id_type_resolvers[clazz]['field_name']
+
+            connection_name = NOCRootQuery.\
+                graph_connection_type_resolvers[clazz]['field_name']
+
+            all_name = NOCRootQuery.\
+                graph_all_type_resolvers[clazz]['field_name']
+
+            dict_obj = {
+                "type_name": "{}".format(clazz),
+                "connection_name": connection_name,
+                "byid_name": byid_name,
+                "all_name": all_name
+            }
+            expected["getOpticalLinkDependendenciesTypes"].append(dict_obj)
+
+        result = schema.execute(query, context=self.context)
+        assert not result.errors, result.errors
+
+        self.assertEqual(result.data, expected)
 
 
 class ServiceClassConnectionTest(Neo4jGraphQLNetworkTest):
